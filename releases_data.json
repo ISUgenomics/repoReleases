@@ -1,0 +1,151 @@
+[
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.13 (r248)",
+        "release_body": "Notable changes:\r\n\r\n * New feature: added option -T to specify a non-standard NCBI translation\r\n   table (#56 and #57). As this is an indexing option, the binary index format\r\n   has to be changed accordingly. **Miniprot will reject indices built with\r\n   previous versions.**\r\n\r\n * Improvement: properly handle reference deletions involving in-frame stop\r\n   codons (#58). Older versions would not penalize these stop codons. This\r\n   change also improves junction accuracy especially for distant homologs.\r\n\r\n * Bugfix: in the GFF3 output, CDS now includes stop codons (#55). Note the in\r\n   GTF, CDS excludes stop codons.\r\n\r\n * Bugfix: suppress an extra amino acid in the --trans or --aln output (#47).\r\n   In rare cases, this may lead to memory violation.\r\n\r\n(0.13: 6 March 2024, r248)",
+        "issues": [
+            {
+                "number": 56,
+                "title": "Pgap 9185 gencode 1",
+                "url": "https://github.com/lh3/miniprot/pull/56"
+            },
+            {
+                "number": 58,
+                "title": "Inserted internal stop codons are not penalized",
+                "url": "https://github.com/lh3/miniprot/issues/58"
+            },
+            {
+                "number": 55,
+                "title": "GFF3 output is malformed for stop_codon features",
+                "url": "https://github.com/lh3/miniprot/issues/55"
+            },
+            {
+                "number": 57,
+                "title": "Different translation tables",
+                "url": "https://github.com/lh3/miniprot/issues/57"
+            },
+            {
+                "number": 47,
+                "title": "There is always an additional amino acid residue after the final stop codon of the protein sequence with --trans",
+                "url": "https://github.com/lh3/miniprot/issues/47"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.12 (r237)",
+        "release_body": "Notable changes:\r\n\r\n * New feature: added option --no-cs to disable the cs tag. This tag is not as\r\n   useful as the cs tag for nucleotide alignment because it does not encode the\r\n   matching amino acids.\r\n\r\n * New feature: output the number of frameshifts and in-frame stop codons in\r\n   the PAF output. It is non-trivial to parse in-frame stop codons.\r\n\r\n * Bugfix: fixed malformatted protein sequences when --gtf and --trans are both\r\n   specified (#45).\r\n\r\n(0.12: 24 June 2023, r237)",
+        "issues": [
+            {
+                "number": 45,
+                "title": "Information function --trans ",
+                "url": "https://github.com/lh3/miniprot/issues/45"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.11 (r234)",
+        "release_body": "Notable changes:\r\n\r\n * New feature: added option --trans to output translated protein sequences. It\r\n   is possible to extract these sequences from the --aln output but the --trans\r\n   output is smaller and more convenient.\r\n\r\n * Bugfix: infinite error messages if a wrong option is in use.\r\n\r\n * Improvement: better error messages given nonexisting query files (#40).\r\n\r\n(0.11: 18 April 2023, r234)",
+        "issues": [
+            {
+                "number": 40,
+                "title": "Report errors mapping amino acids",
+                "url": "https://github.com/lh3/miniprot/pull/40"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.10 (r225)",
+        "release_body": "Notable change:\r\n\r\n * Bugfix: rare segmentation fault (#38 and #39). This bug affected all\r\n   previous versions of miniprot.\r\n\r\n(0.10: 3 April 2023, r225)",
+        "issues": [
+            {
+                "number": 39,
+                "title": "Memory error",
+                "url": "https://github.com/lh3/miniprot/issues/39"
+            },
+            {
+                "number": 38,
+                "title": "Segmentation fault",
+                "url": "https://github.com/lh3/miniprot/issues/38"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.9 (r223)",
+        "release_body": "Notable change:\r\n\r\n * Bugfix: not all query proteins were outputted with option `-u`.\r\n\r\n(0.9: 9 March 2023, r223)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.8 (r220)",
+        "release_body": "Notable changes:\r\n\r\n * Improvement: slightly improved the sensitivity to distant homologs at a minor\r\n   cost of specificity. On the human-zebrafish dataset, we gained 1.2% junction\r\n   sensivity at the cost of 0.2% specificity.\r\n\r\n * New feature: added option `--aln` to output residue alignment.\r\n\r\n * New feature: added option `-I` to automatically set the maximum intron size to\r\n   sqrt(GenomeSize) * 3.6, where GenomeSize is the total length of the\r\n   nucleotide sequences. For a small genome, a small threshold leads to\r\n   higher accuracy. This option is not the default because the reference is not\r\n   always a whole genome.\r\n\r\n(0.8: 6 March 2023, r220)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.7 (r207)",
+        "release_body": "Notable changes:\r\n\r\n * Improvement: replaced open syncmers with modimers. This simplifies the code\r\n   and slightly reduces the memory at comparable k-mer sampling rate. This\r\n   changes the index format.\r\n\r\n * Improvement: fine tune parameters for higher sensitivity at a minor cost of\r\n   junction accuracy: a) only index ORFs >= 30bp; b) reduced max k-mer\r\n   occurrences from 50k to 20k; c) sample k-mers at a rate of 50%; d) reduced\r\n   min number of k-mers from 5 to 3; e) add a bonus chaining score for anchors\r\n   on the same reference block.\r\n\r\n * Improvement: adjust the max k-mer occurrence dynamically per protein.\r\n\r\n * Improvement: implemented 2-level chaining like minimap2 and minigraph. This\r\n   reduces chaining time.\r\n\r\n * Bugfix: fixed a rare off-by-1 memory violation\r\n\r\n * Bugfix: fixed a memory leak\r\n\r\nOverall, miniprot becomes faster at slightly higher peak memory usage. It is\r\nmore sensitive to distant homologs, though the junction accuracy of additional\r\nalignment is usually lower. Also importantly, the index format of miniprot has\r\nbeen changed. Miniprot will throw an error if you use miniprot with pre-built\r\nindices generated with older versions.\r\n\r\n(0.7: 25 December 2022, r207)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.6 (r185)",
+        "release_body": "Notable changes:\r\n\r\n * Improvement: for each protein, only output alignments close to the best\r\n   alignment. Also added option --outs to tune the threshold.\r\n\r\n * New feature: output GTF with option --gtf.\r\n\r\n(0.6: 12 December 2022, r185)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.5 (r179)",
+        "release_body": "Notable changes:\r\n\r\n * Improvement: more detailed splice model considering G|GTR..YYYNYAG|. This is\r\n   not enabled by default. Added option `-j` to change the splice model.\r\n\r\n * Added the miniprot preprint. Available at http://arxiv.org/abs/2210.08052\r\n\r\n(0.5: 17 October 2022, r179)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.4 (r165)",
+        "release_body": "This version implements a better splice model and pays a little more effort in\r\naligning terminal exons. It improves both sensitivity and specificity by a few\r\npercent.\r\n\r\nOther notable changes:\r\n\r\n * Breaking change: changed -C to scale the splice model\r\n\r\n * Bugfix: implemented option -w (#12)\r\n\r\n * Bugfix: reduced the indexing time for highly fragmented genomes (#10)\r\n\r\n * New feature: output a Rank attribute in GFF\r\n\r\n(0.4: 5 October 2022, r165)",
+        "issues": [
+            {
+                "number": 12,
+                "title": "-w option appears not to be implemented",
+                "url": "https://github.com/lh3/miniprot/issues/12"
+            },
+            {
+                "number": 10,
+                "title": "Indexing is much slower on fragmented assemblies",
+                "url": "https://github.com/lh3/miniprot/issues/10"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.3 (r137)",
+        "release_body": "Notable changes:\r\n\r\n * Improvement: fine tune parameters and heuristics: higher non-GT-AG penalty,\r\n   higher frameshift penalty, higher penalty on in-frame stop codons and a\r\n   small penalty on long terminal introns. Miniprot is a little more sensitive\r\n   and a little more accurate, at a minor cost of performance.\r\n\r\n * New feature: richer GFF output. Miniprot now reports per-exon alignment\r\n   score, number of frameshifts, number of in-frame stop codons and\r\n   non-canonical donor/acceptor sequences.\r\n\r\n * New feature: added option `--outn` to control the number of alignments per\r\n   protein to output.\r\n\r\n * New feature: added option `-P` to change the ID prefix in GFF output (#6).\r\n\r\n * Bug fix: fixed a segmentation fault when there are no k-mers on a reference\r\n   sequence (#4).\r\n\r\n(0.3: 22 September 2022, r137)",
+        "issues": [
+            {
+                "number": 6,
+                "title": "Add an option to not to print ##PAF line to gff file",
+                "url": "https://github.com/lh3/miniprot/issues/6"
+            },
+            {
+                "number": 4,
+                "title": "Seg fault with improper arguments",
+                "url": "https://github.com/lh3/miniprot/issues/4"
+            }
+        ]
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.2 (r116)",
+        "release_body": "Notable changes:\r\n\r\n * New feature: output GFF3 with option `--gff`. PAF alignments are embedded in\r\n   `##PAF` lines in the output GFF3.\r\n\r\n * Improvement: give a bonus score -B if extension reaches the end of a protein.\r\n   BWA-MEM and minimap2 both have this heuristic.\r\n\r\n * Improvement: pay more effort to the first and the last exons. This increases\r\n   the sensitivity at the cost of performance.\r\n\r\n * Improvement: increased non-canonical splicing penalty -C from 6 to 11. This\r\n   increases overall specificity.\r\n\r\n * Improvement: rank an alignment with the DP score disregarding introns. This\r\n   is to reduce the effect pseudogenes. Minimap2 uses the same strategy.\r\n\r\n * Bug fixes: fixed incorrect CIGAR in corner cases and patched a minor memory\r\n   leak.\r\n\r\nThis version works on several real datasets to decent accuracy without crashing\r\nor memory leaks. It is ready for more users.\r\n\r\n(0.2: 12 September 2022, r116)",
+        "issues": []
+    },
+    {
+        "repo": "miniprot",
+        "release_name": "Miniprot-0.1 (r97)",
+        "release_body": "This is the first public release of miniprot, a mapper for aligning proteins to a large genome. This release has a few issues and is generally not recommended for production uses.\r\n\r\n(0.1: 9 September 2022, r97)",
+        "issues": []
+    }
+]

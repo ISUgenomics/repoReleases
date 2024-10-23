@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .kanban-board {
+      display: flex;
+    }
+    .column {
+      flex: 1;
+      margin: 5px;
+    }
+    .item {
+      background-color: #f1f1f1;
+      margin: 5px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="kanban-board">
+    <div class="column" id="software-name-column"><h2>Software</h2></div>
+    <div class="column" id="release-notes-column"><h2>Release Notes</h2></div>
+    <div class="column" id="issues-column"><h2>Issues Fixed</h2></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+

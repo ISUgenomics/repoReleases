@@ -1,0 +1,82 @@
+# read_repos.py
+
+def read_repositories(file_path):
+    with open(file_path, 'r') as file:
+        repos = [line.strip() for line in file if line.strip()]
+    return repos
+
+repositories = read_repositories('input.txt')
+
+import re
+
+def extract_owner_repo(url):
+    match = re.match(r'https?://github\.com/([^/]+)/([^/]+)', url)
+    if match:
+        return match.groups()
+    else:
+        return None, None
+
+repo_info_list = []
+for repo_url in repositories:
+    owner, repo = extract_owner_repo(repo_url)
+    if owner and repo:
+        repo_info_list.append((owner, repo))
+    else:
+        print(f"Invalid repository URL: {repo_url}")
+
+import requests
+
+def fetch_releases(owner, repo, headers):
+    releases_url = f'https://api.github.com/repos/{owner}/{repo}/releases'
+    response = requests.get(releases_url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f'Failed to fetch releases for {owner}/{repo}')
+        return []
+
+def fetch_issue(owner, repo, issue_number, headers):
+    issue_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}'
+    response = requests.get(issue_url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f'Failed to fetch issue #{issue_number} for {owner}/{repo}')
+        return None
+
+# GitHub API headers
+headers = {'Accept': 'application/vnd.github.v3+json'}
+
+all_releases_data = []
+
+for owner, repo in repo_info_list:
+    releases = fetch_releases(owner, repo, headers)
+    for release in releases:
+        release_body = release.get('body', '')
+        # Extract issue numbers from the release body
+        issue_numbers = re.findall(r'#(\d+)', release_body)
+        issue_numbers = list(set(issue_numbers))  # Remove duplicates
+
+        issues_info = []
+        for issue_number in issue_numbers:
+            issue_data = fetch_issue(owner, repo, issue_number, headers)
+            if issue_data:
+                issues_info.append({
+                    'number': issue_data['number'],
+                    'title': issue_data['title'],
+                    'url': issue_data['html_url']
+                })
+
+        all_releases_data.append({
+            'repo': repo,
+            'release_name': release['name'],
+            'release_body': release_body,
+            'issues': issues_info
+        })
+
+import json
+
+with open('releases_data.json', 'w') as outfile:
+    json.dump(all_releases_data, outfile, indent=4)
+
+
