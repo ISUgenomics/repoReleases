@@ -1,3 +1,4 @@
+<!-- popup.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,9 +8,17 @@
       margin: 0;
       padding: 0;
     }
+    #token-input, #repo-input, #add-repo-button, #fetch-button {
+      margin: 10px;
+      padding: 10px;
+    }
+    #status {
+      margin: 10px;
+      font-weight: bold;
+    }
     .kanban-board {
       display: flex;
-      height: 100vh;
+      height: calc(100vh - 200px);
       overflow: auto;
     }
     .column {
@@ -25,6 +34,21 @@
   </style>
 </head>
 <body>
+  <!-- Token Input Field -->
+  <input type="text" id="token-input" placeholder="Enter GitHub Personal Access Token">
+  <button id="save-token-button">Save Token</button>
+  <br>
+
+  <!-- Repository Management -->
+  <input type="text" id="repo-url" placeholder="Enter GitHub repository URL">
+  <button id="add-repo-button">Add Repository</button>
+  <ul id="repo-list"></ul>
+  
+  <!-- Fetch Data Button -->
+  <button id="fetch-button">Fetch All Releases</button>
+  <div id="status"></div>
+
+  <!-- Kanban Board -->
   <div class="kanban-board">
     <div class="column" id="software-name-column"><h2>Software</h2></div>
     <div class="column" id="release-notes-column"><h2>Release Notes</h2></div>
