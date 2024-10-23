@@ -4,12 +4,12 @@
   "version": "1.0",
   "description": "Displays GitHub releases and issues in a Kanban board.",
   "permissions": [],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "host_permissions": [],
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "GitHub Releases Kanban"
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "web_accessible_resources": [
     {

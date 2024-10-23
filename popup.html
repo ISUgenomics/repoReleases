@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>GitHub Releases Kanban</title>
   <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
     .kanban-board {
       display: flex;
+      height: 100vh;
+      overflow: auto;
     }
     .column {
       flex: 1;
       margin: 5px;
+      overflow-y: auto;
     }
     .item {
       background-color: #f1f1f1;

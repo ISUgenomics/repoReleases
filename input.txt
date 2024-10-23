@@ -1,1 +1,2 @@
 https://github.com/lh3/miniprot/
+https://github.com/lh3/bwa
