@@ -20,30 +20,35 @@
       font-weight: bold;
     }
     .kanban-board {
-      display: flex;
-      height: calc(100vh - 150px);
-      overflow: auto;
+      display: grid;
+      grid-template-columns: 1fr 2fr 2fr;
+      grid-auto-rows: auto;
+      gap: 5px;
+      margin: 10px;
     }
-    .column {
-      flex: 1;
-      margin: 5px;
-      overflow-y: auto;
-    }
-    .column h2 {
+    .kanban-board h2 {
       text-align: center;
-    }
-    .item {
-      background-color: #f1f1f1;
-      margin: 5px;
+      background-color: #f0f0f0;
+      margin: 0;
       padding: 10px;
+    }
+    .cell {
+      background-color: #f9f9f9;
+      padding: 10px;
+      overflow: auto;
+      border: 1px solid #ddd;
       border-radius: 5px;
     }
-    .item a {
+    .cell a {
       color: #007bff;
       text-decoration: none;
     }
-    .item a:hover {
+    .cell a:hover {
       text-decoration: underline;
+    }
+    .header {
+      font-weight: bold;
+      background-color: #e0e0e0;
     }
   </style>
 </head>
@@ -58,10 +63,12 @@
   <div id="status"></div>
 
   <!-- Kanban Board -->
-  <div class="kanban-board">
-    <div class="column" id="software-name-column"><h2>Software</h2></div>
-    <div class="column" id="release-notes-column"><h2>Release Notes</h2></div>
-    <div class="column" id="issues-column"><h2>Issues Fixed</h2></div>
+  <div class="kanban-board" id="kanban-board">
+    <!-- Headers -->
+    <div class="cell header">Software</div>
+    <div class="cell header">Release Notes</div>
+    <div class="cell header">Issues Fixed</div>
+    <!-- Dynamic content will be inserted here -->
   </div>
 
   <script src="popup.js"></script>

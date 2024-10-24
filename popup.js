@@ -115,40 +115,40 @@ async function fetchAllData(token) {
 
 // Function to render the data
 function renderData(data) {
-  const softwareColumn = document.getElementById('software-name-column');
-  const releaseNotesColumn = document.getElementById('release-notes-column');
-  const issuesColumn = document.getElementById('issues-column');
+  const kanbanBoard = document.getElementById('kanban-board');
 
-  // Clear existing content
-  softwareColumn.innerHTML = '<h2>Software</h2>';
-  releaseNotesColumn.innerHTML = '<h2>Release Notes</h2>';
-  issuesColumn.innerHTML = '<h2>Issues Fixed</h2>';
+  // Clear existing content except headers
+  kanbanBoard.innerHTML = `
+    <div class="cell header">Software</div>
+    <div class="cell header">Release Notes</div>
+    <div class="cell header">Issues Fixed</div>
+  `;
 
   data.forEach(release => {
-    // Software Name
-    const softwareItem = document.createElement('div');
-    softwareItem.className = 'item';
-    softwareItem.textContent = release.repo;
-    softwareColumn.appendChild(softwareItem);
+    // Software Name Cell
+    const softwareCell = document.createElement('div');
+    softwareCell.className = 'cell';
+    softwareCell.textContent = release.repo;
+    kanbanBoard.appendChild(softwareCell);
 
-    // Release Notes
-    const releaseItem = document.createElement('div');
-    releaseItem.className = 'item';
-    releaseItem.innerHTML = `<strong>${release.release_name}</strong><br>${release.release_body}`;
-    releaseNotesColumn.appendChild(releaseItem);
+    // Release Notes Cell
+    const releaseNotesCell = document.createElement('div');
+    releaseNotesCell.className = 'cell';
+    releaseNotesCell.innerHTML = `<strong>${release.release_name}</strong><br>${release.release_body}`;
+    kanbanBoard.appendChild(releaseNotesCell);
 
-    // Issues Fixed
-    const issuesItem = document.createElement('div');
-    issuesItem.className = 'item';
+    // Issues Fixed Cell
+    const issuesCell = document.createElement('div');
+    issuesCell.className = 'cell';
     release.issues.forEach(issue => {
       const issueLink = document.createElement('a');
       issueLink.href = issue.url;
       issueLink.target = '_blank';
       issueLink.textContent = `#${issue.number}: ${issue.title}`;
-      issuesItem.appendChild(issueLink);
-      issuesItem.appendChild(document.createElement('br'));
+      issuesCell.appendChild(issueLink);
+      issuesCell.appendChild(document.createElement('br'));
     });
-    issuesColumn.appendChild(issuesItem);
+    kanbanBoard.appendChild(issuesCell);
   });
 }
 
