@@ -230,9 +230,9 @@ document.getElementById('fetch-button').addEventListener('click', async () => {
 // Initialize the extension
 document.addEventListener('DOMContentLoaded', () => {
   // Load saved token
-  getGitHubToken().then((token) => {
-    document.getElementById('token-input').value = token;
-  });
+//  getGitHubToken().then((token) => {
+//    document.getElementById('token-input').value = token;
+//  });
 
   // Display stored repositories
   displayRepos();
