@@ -15,52 +15,18 @@ function setGitHubToken(token) {
   });
 }
 
-// Function to get stored repositories
-function getStoredRepos() {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get(['repositories'], function(result) {
-      resolve(result.repositories || []);
-    });
-  });
-}
-
-// Function to add a repository
-function addRepo(url) {
-  getStoredRepos().then((repos) => {
-    repos.push(url);
-    chrome.storage.sync.set({ 'repositories': repos }, function() {
-      console.log('Repository added.');
-      displayRepos();
-    });
-  });
-}
-
-// Function to display repositories
-function displayRepos() {
-  getStoredRepos().then((repos) => {
-    const repoList = document.getElementById('repo-list');
-    repoList.innerHTML = '';
-    repos.forEach((repoUrl, index) => {
-      const li = document.createElement('li');
-      li.textContent = repoUrl;
-      const removeButton = document.createElement('button');
-      removeButton.textContent = 'Remove';
-      removeButton.onclick = () => removeRepo(index);
-      li.appendChild(removeButton);
-      repoList.appendChild(li);
-    });
-  });
-}
-
-// Function to remove a repository
-function removeRepo(index) {
-  getStoredRepos().then((repos) => {
-    repos.splice(index, 1);
-    chrome.storage.sync.set({ 'repositories': repos }, function() {
-      console.log('Repository removed.');
-      displayRepos();
-    });
-  });
+// Function to read input.txt and return an array of repository URLs
+async function readInputFile() {
+  const inputUrl = chrome.runtime.getURL('input.txt');
+  const response = await fetch(inputUrl);
+  if (response.ok) {
+    const text = await response.text();
+    // Split the text into lines and filter out empty lines
+    return text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  } else {
+    console.error('Failed to read input.txt');
+    return [];
+  }
 }
 
 // Function to extract owner and repo from URL
@@ -106,7 +72,8 @@ async function fetchIssue(owner, repo, issueNumber, token) {
 }
 
 // Function to fetch all data
-async function fetchAllData(token, inputRepos) {
+async function fetchAllData(token) {
+  const inputRepos = await readInputFile();
   const allReleasesData = [];
 
   for (const repoUrl of inputRepos) {
@@ -190,15 +157,8 @@ document.getElementById('save-token-button').addEventListener('click', () => {
   const token = document.getElementById('token-input').value.trim();
   setGitHubToken(token);
   alert('GitHub token saved.');
-});
-
-// Event listener for the Add Repository button
-document.getElementById('add-repo-button').addEventListener('click', () => {
-  const repoUrl = document.getElementById('repo-url').value.trim();
-  if (repoUrl) {
-    addRepo(repoUrl);
-    document.getElementById('repo-url').value = '';
-  }
+  // Clear the token input field after saving
+  document.getElementById('token-input').value = '';
 });
 
 // Event listener for the Fetch All Releases button
@@ -208,14 +168,7 @@ document.getElementById('fetch-button').addEventListener('click', async () => {
 
     document.getElementById('status').textContent = 'Fetching data...';
 
-    const inputRepos = await getStoredRepos();
-
-    if (inputRepos.length === 0) {
-      document.getElementById('status').textContent = 'No repositories to fetch.';
-      return;
-    }
-
-    const data = await fetchAllData(token, inputRepos);
+    const data = await fetchAllData(token);
 
     renderData(data);
 
@@ -229,12 +182,7 @@ document.getElementById('fetch-button').addEventListener('click', async () => {
 
 // Initialize the extension
 document.addEventListener('DOMContentLoaded', () => {
-  // Load saved token
-//  getGitHubToken().then((token) => {
-//    document.getElementById('token-input').value = token;
-//  });
-
-  // Display stored repositories
-  displayRepos();
+  // Do not load the token into the input field to prevent it from being visible
+  // Other initialization tasks can go here if needed
 });
 

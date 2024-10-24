@@ -1,12 +1,10 @@
 {
   "manifest_version": 3,
   "name": "GitHub Releases Kanban",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Displays GitHub releases and issues in a Kanban board.",
   "permissions": ["storage"],
-  "host_permissions": [
-    "https://api.github.com/*"
-  ],
+  "host_permissions": ["https://api.github.com/*"],
   "action": {
     "default_title": "GitHub Releases Kanban"
   },
@@ -15,8 +13,9 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["releases_data.json","input.txt"],
+      "resources": ["input.txt"],
       "matches": ["<all_urls>"]
     }
   ]
 }
+
