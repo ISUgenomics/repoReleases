@@ -10,10 +10,14 @@
       font-family: Arial, sans-serif;
     }
     #token-input, #save-token-button,
-    #fetch-button {
+    #fetch-button, #search-input, #search-button, #reset-button,
+    #date-filter, #custom-date, #release-count {
       margin: 10px;
       padding: 10px;
       font-size: 14px;
+    }
+    #release-count {
+      width: 100px;
     }
     #status {
       margin: 10px;
@@ -61,6 +65,26 @@
   <!-- Fetch Data Button -->
   <button id="fetch-button">Fetch All Releases</button>
   <div id="status"></div>
+
+  <!-- Search and Filter Options -->
+  <input type="text" id="search-input" placeholder="Search...">
+  <button id="search-button">Search</button>
+  <button id="reset-button">Reset</button>
+  <br>
+
+  <label for="date-filter">Show releases from:</label>
+  <select id="date-filter">
+    <option value="all">All Time</option>
+    <option value="last_month">Last Month</option>
+    <option value="last_6_months">Last 6 Months</option>
+    <option value="custom">Custom Date</option>
+  </select>
+  <input type="date" id="custom-date" style="display:none;">
+  <br>
+
+  <label for="release-count">Number of releases to display per repository:</label>
+  <input type="number" id="release-count" min="1" placeholder="e.g., 1 for latest release">
+  <br>
 
   <!-- Kanban Board -->
   <div class="kanban-board" id="kanban-board">
