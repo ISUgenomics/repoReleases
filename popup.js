@@ -1,5 +1,13 @@
 // popup.js
 
+// Configure Marked options
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+  smartLists: true,
+  smartypants: true,
+});
+
 // Functions to get and set the GitHub token in storage
 function getGitHubToken() {
   return new Promise((resolve) => {
@@ -85,6 +93,9 @@ async function fetchIssue(owner, repo, issueNumber, token) {
 }
 
 // Function to fetch all data
+// [Your existing code above...]
+
+// Function to fetch all data
 async function fetchAllData(token, perRepoReleaseCount = null) {
   const inputRepos = await readInputFile();
   const allReleasesData = [];
@@ -98,34 +109,68 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
 
     for (const release of releases) {
       const releaseBody = release.body || '';
-      // Extract issue numbers from the release body
-      const issueNumbers = [...new Set((releaseBody.match(/#(\d+)/g) || []).map(s => s.slice(1)))];
+
+      // Extract issue references from the release body
+      const issueReferences = [];
+      const regex = /(\b[\w\-]+\/[\w\-]+)?#(\d+)/g;
+      let match;
+
+      while ((match = regex.exec(releaseBody)) !== null) {
+        const fullRepo = match[1]; // May be undefined
+        const issueNumber = match[2];
+
+        let issueOwner = owner;
+        let issueRepo = repo;
+
+        if (fullRepo) {
+          const [refOwner, refRepo] = fullRepo.split('/');
+          issueOwner = refOwner;
+          issueRepo = refRepo;
+        }
+
+        issueReferences.push({
+          owner: issueOwner,
+          repo: issueRepo,
+          number: issueNumber,
+        });
+      }
+
+      // Remove duplicate issue references
+      const uniqueIssueReferences = issueReferences.filter(
+        (v, i, a) =>
+          a.findIndex(t => t.owner === v.owner && t.repo === v.repo && t.number === v.number) === i
+      );
 
       const issuesInfo = [];
 
-      for (const issueNumber of issueNumbers) {
-        const issueData = await fetchIssue(owner, repo, issueNumber, token);
+      for (const issueRef of uniqueIssueReferences) {
+        const issueData = await fetchIssue(issueRef.owner, issueRef.repo, issueRef.number, token);
         if (issueData) {
           issuesInfo.push({
             'number': issueData.number,
             'title': issueData.title,
-            'url': issueData.html_url
+            'url': issueData.html_url,
+            'owner': issueRef.owner,
+            'repo': issueRef.repo,
           });
         }
       }
 
       allReleasesData.push({
+        'owner': owner, // Add this line
         'repo': repo,
         'release_name': release.name || 'No Release Name',
         'release_body': releaseBody,
         'issues': issuesInfo,
-        'published_at': release.published_at || release.created_at, // Include release date
+        'published_at': release.published_at || release.created_at,
       });
     }
   }
 
   return allReleasesData;
 }
+
+
 
 // Function to render the data
 function renderData(data, options = {}) {
@@ -171,12 +216,16 @@ function renderData(data, options = {}) {
   // Filter by search query
   if (searchQuery) {
     const searchText = searchQuery.toLowerCase();
+// In the filter by search query section
     filteredData = filteredData.filter(release => {
       return (
         release.repo.toLowerCase().includes(searchText) ||
-        release.release_name.toLowerCase().includes(searchText) ||
-        release.release_body.toLowerCase().includes(searchText) ||
-        release.issues.some(issue => issue.title.toLowerCase().includes(searchText))
+        (release.release_name && release.release_name.toLowerCase().includes(searchText)) ||
+        (release.release_body && release.release_body.toLowerCase().includes(searchText)) ||
+        release.issues.some(issue =>
+          issue.title.toLowerCase().includes(searchText) ||
+          `${issue.owner}/${issue.repo}#${issue.number}`.toLowerCase().includes(searchText)
+        )
       );
     });
   }
@@ -206,27 +255,65 @@ function renderData(data, options = {}) {
       // Software Name Cell
       const softwareCell = document.createElement('div');
       softwareCell.className = 'cell';
-      softwareCell.textContent = repo;
+
+      // Create software name element
+      const softwareName = document.createElement('div');
+      softwareName.className = 'software-name';
+      softwareName.textContent = repo;
+
+      // Create release number element
+      const releaseNumber = document.createElement('div');
+      releaseNumber.className = 'release-number';
+      releaseNumber.textContent = release.release_name || 'No Release Name';
+
+      // Create release date element
+      const releaseDate = document.createElement('div');
+      releaseDate.className = 'release-date';
+      const releaseDateObj = new Date(release.published_at);
+      releaseDate.textContent = releaseDateObj.toLocaleDateString();
+
+      // Append elements to software cell
+      softwareCell.appendChild(softwareName);
+      softwareCell.appendChild(releaseNumber);
+      softwareCell.appendChild(releaseDate);
+
       kanbanBoard.appendChild(softwareCell);
 
       // Release Notes Cell
       const releaseNotesCell = document.createElement('div');
-      releaseNotesCell.className = 'cell';
-      releaseNotesCell.innerHTML = `<strong>${release.release_name}</strong><br>${release.release_body}`;
+      releaseNotesCell.className = 'cell markdown-content';
+
+      // Parse and sanitize the release notes
+      const releaseNotesMarkdown = release.release_body || 'No release notes.';
+      const releaseNotesHTML = DOMPurify.sanitize(marked.parse(releaseNotesMarkdown));
+      releaseNotesCell.innerHTML = releaseNotesHTML;
       kanbanBoard.appendChild(releaseNotesCell);
 
       // Issues Fixed Cell
+      // Issues Fixed Cell
       const issuesCell = document.createElement('div');
       issuesCell.className = 'cell';
-      release.issues.forEach(issue => {
-        const issueLink = document.createElement('a');
-        issueLink.href = issue.url;
-        issueLink.target = '_blank';
-        issueLink.textContent = `#${issue.number}: ${issue.title}`;
-        issuesCell.appendChild(issueLink);
-        issuesCell.appendChild(document.createElement('br'));
-      });
+      if (release.issues.length > 0) {
+        release.issues.forEach(issue => {
+          const issueLink = document.createElement('a');
+          issueLink.href = issue.url;
+          issueLink.target = '_blank';
+
+          let issueText = `#${issue.number}: ${issue.title}`;
+          if (issue.owner !== release.owner || issue.repo !== release.repo) {
+            issueText = `${issue.owner}/${issue.repo}#${issue.number}: ${issue.title}`;
+          }
+
+          issueLink.textContent = issueText;
+          issuesCell.appendChild(issueLink);
+          issuesCell.appendChild(document.createElement('br'));
+        });
+      } else {
+        issuesCell.textContent = 'No issues linked.';
+      }
       kanbanBoard.appendChild(issuesCell);
+
+
     });
   }
 
@@ -305,7 +392,6 @@ document.getElementById('date-filter').addEventListener('change', (event) => {
 
 // Initialize the extension
 document.addEventListener('DOMContentLoaded', () => {
-  // Do not load the token into the input field to prevent it from being visible
   // Other initialization tasks can go here if needed
 });
 
