@@ -11,14 +11,14 @@ marked.setOptions({
 // Functions to get and set the GitHub token in storage
 function getGitHubToken() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(['githubToken'], function(result) {
+    chrome.storage.sync.get(['githubToken'], function (result) {
       resolve(result.githubToken || '');
     });
   });
 }
 
 function setGitHubToken(token) {
-  chrome.storage.sync.set({ 'githubToken': token }, function() {
+  chrome.storage.sync.set({ githubToken: token }, function () {
     console.log('GitHub token saved.');
   });
 }
@@ -30,7 +30,10 @@ async function readInputFile() {
   if (response.ok) {
     const text = await response.text();
     // Split the text into lines and filter out empty lines
-    return text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    return text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
   } else {
     console.error('Failed to read input.txt');
     return [];
@@ -50,7 +53,7 @@ function extractOwnerRepo(url) {
 // Function to fetch releases from GitHub API, with limit per repository
 async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   let releasesUrl = `https://api.github.com/repos/${owner}/${repo}/releases`;
-
+  
   const params = new URLSearchParams();
 
   // If perRepoReleaseCount is specified, set per_page parameter
@@ -63,8 +66,8 @@ async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   }
 
   const headers = {
-    'Accept': 'application/vnd.github.v3+json',
-    ...(token && { 'Authorization': `token ${token}` })
+    Accept: 'application/vnd.github.v3+json',
+    ...(token && { Authorization: `token ${token}` }),
   };
 
   try {
@@ -92,13 +95,12 @@ async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   }
 }
 
-
 // Function to fetch issue details from GitHub API
 async function fetchIssue(owner, repo, issueNumber, token) {
   const issueUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
   const headers = {
-    'Accept': 'application/vnd.github.v3+json',
-    ...(token && { 'Authorization': `token ${token}` })
+    Accept: 'application/vnd.github.v3+json',
+    ...(token && { Authorization: `token ${token}` }),
   };
   try {
     const response = await fetch(issueUrl, { headers });
@@ -119,14 +121,13 @@ async function fetchIssue(owner, repo, issueNumber, token) {
       return null;
     }
   } catch (error) {
-    console.error(`Error fetching issue #${issueNumber} for ${owner}/${repo}:`, error);
+    console.error(
+      `Error fetching issue #${issueNumber} for ${owner}/${repo}:`,
+      error
+    );
     return null;
   }
 }
-
-
-// Function to fetch all data
-// [Your existing code above...]
 
 // Function to fetch all data
 async function fetchAllData(token, perRepoReleaseCount = null) {
@@ -138,7 +139,12 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
     if (!ownerRepo) continue;
     const { owner, repo } = ownerRepo;
 
-    const releases = await fetchReleases(owner, repo, token, perRepoReleaseCount);
+    const releases = await fetchReleases(
+      owner,
+      repo,
+      token,
+      perRepoReleaseCount
+    );
 
     for (const release of releases) {
       const releaseBody = release.body || '';
@@ -171,31 +177,39 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
       // Remove duplicate issue references
       const uniqueIssueReferences = issueReferences.filter(
         (v, i, a) =>
-          a.findIndex(t => t.owner === v.owner && t.repo === v.repo && t.number === v.number) === i
+          a.findIndex(
+            (t) =>
+              t.owner === v.owner && t.repo === v.repo && t.number === v.number
+          ) === i
       );
 
       const issuesInfo = [];
 
       for (const issueRef of uniqueIssueReferences) {
-        const issueData = await fetchIssue(issueRef.owner, issueRef.repo, issueRef.number, token);
+        const issueData = await fetchIssue(
+          issueRef.owner,
+          issueRef.repo,
+          issueRef.number,
+          token
+        );
         if (issueData) {
           issuesInfo.push({
-            'number': issueData.number,
-            'title': issueData.title,
-            'url': issueData.html_url,
-            'owner': issueRef.owner,
-            'repo': issueRef.repo,
+            number: issueData.number,
+            title: issueData.title,
+            url: issueData.html_url,
+            owner: issueRef.owner,
+            repo: issueRef.repo,
           });
         }
       }
 
       allReleasesData.push({
-        'owner': owner, // Add this line
-        'repo': repo,
-        'release_name': release.name || 'No Release Name',
-        'release_body': releaseBody,
-        'issues': issuesInfo,
-        'published_at': release.published_at || release.created_at,
+        owner: owner,
+        repo: repo,
+        release_name: release.name || 'No Release Name',
+        release_body: releaseBody,
+        issues: issuesInfo,
+        published_at: release.published_at || release.created_at,
       });
     }
   }
@@ -203,15 +217,9 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
   return allReleasesData;
 }
 
-
-
 // Function to render the data
 function renderData(data, options = {}) {
-  const {
-    searchQuery = '',
-    dateFilter = 'all',
-    customDate = null,
-  } = options;
+  const { searchQuery = '', dateFilter = 'all', customDate = null } = options;
   const kanbanBoard = document.getElementById('kanban-board');
 
   // Clear existing content except headers
@@ -224,11 +232,52 @@ function renderData(data, options = {}) {
   // Filter data based on options
   let filteredData = data;
 
-  // [Existing filtering code remains the same...]
+  // Filter by date
+  if (dateFilter !== 'all') {
+    const now = new Date();
+    let cutoffDate;
+    if (dateFilter === 'last_month') {
+      cutoffDate = new Date();
+      cutoffDate.setMonth(now.getMonth() - 1);
+    } else if (dateFilter === 'last_6_months') {
+      cutoffDate = new Date();
+      cutoffDate.setMonth(now.getMonth() - 6);
+    } else if (dateFilter === 'custom' && customDate) {
+      cutoffDate = new Date(customDate);
+    }
+
+    if (cutoffDate) {
+      filteredData = filteredData.filter((release) => {
+        const releaseDate = new Date(release.published_at);
+        return releaseDate >= cutoffDate;
+      });
+    }
+  }
+
+  // Filter by search query
+  if (searchQuery) {
+    const searchText = searchQuery.toLowerCase();
+    filteredData = filteredData.filter((release) => {
+      return (
+        release.repo.toLowerCase().includes(searchText) ||
+        (release.release_name &&
+          release.release_name.toLowerCase().includes(searchText)) ||
+        (release.release_body &&
+          release.release_body.toLowerCase().includes(searchText)) ||
+        release.issues.some(
+          (issue) =>
+            issue.title.toLowerCase().includes(searchText) ||
+            `${issue.owner}/${issue.repo}#${issue.number}`
+              .toLowerCase()
+              .includes(searchText)
+        )
+      );
+    });
+  }
 
   // Group releases by repository and track the most recent release date
   const releasesByRepo = {};
-  filteredData.forEach(release => {
+  filteredData.forEach((release) => {
     if (!releasesByRepo[release.repo]) {
       releasesByRepo[release.repo] = {
         releases: [],
@@ -247,11 +296,13 @@ function renderData(data, options = {}) {
 
   // Sort releases in each repository by date (most recent first)
   for (const repo in releasesByRepo) {
-    releasesByRepo[repo].releases.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    releasesByRepo[repo].releases.sort(
+      (a, b) => new Date(b.published_at) - new Date(a.published_at)
+    );
   }
 
   // Create an array of repositories with their releases and most recent release date
-  const repoArray = Object.keys(releasesByRepo).map(repo => ({
+  const repoArray = Object.keys(releasesByRepo).map((repo) => ({
     repoName: repo,
     releases: releasesByRepo[repo].releases,
     mostRecentDate: releasesByRepo[repo].mostRecentDate,
@@ -262,20 +313,26 @@ function renderData(data, options = {}) {
 
   // Render the data
   let hasData = false;
-  repoArray.forEach(repoData => {
+  repoArray.forEach((repoData) => {
     const { repoName, releases } = repoData;
 
-    releases.forEach(release => {
+    releases.forEach((release) => {
       hasData = true;
 
       // Software Name Cell
       const softwareCell = document.createElement('div');
       softwareCell.className = 'cell';
 
-      // Create software name element
-      const softwareName = document.createElement('div');
-      softwareName.className = 'software-name';
-      softwareName.textContent = release.repo;
+     
+
+
+      // Create software name element as a link
+      const softwareNameLink = document.createElement('a');
+      softwareNameLink.className = 'software-name';
+      softwareNameLink.textContent = `${release.owner}/${release.repo}`;
+      softwareNameLink.href = `https://github.com/${release.owner}/${release.repo}`;
+      softwareNameLink.target = '_blank';
+
 
       // Create release number element
       const releaseNumber = document.createElement('div');
@@ -289,7 +346,7 @@ function renderData(data, options = {}) {
       releaseDate.textContent = releaseDateObj.toLocaleDateString();
 
       // Append elements to software cell
-      softwareCell.appendChild(softwareName);
+      softwareCell.appendChild(softwareNameLink);
       softwareCell.appendChild(releaseNumber);
       softwareCell.appendChild(releaseDate);
 
@@ -301,7 +358,9 @@ function renderData(data, options = {}) {
 
       // Parse and sanitize the release notes
       const releaseNotesMarkdown = release.release_body || 'No release notes.';
-      const releaseNotesHTML = DOMPurify.sanitize(marked.parse(releaseNotesMarkdown));
+      const releaseNotesHTML = DOMPurify.sanitize(
+        marked.parse(releaseNotesMarkdown)
+      );
       releaseNotesCell.innerHTML = releaseNotesHTML;
       kanbanBoard.appendChild(releaseNotesCell);
 
@@ -309,7 +368,7 @@ function renderData(data, options = {}) {
       const issuesCell = document.createElement('div');
       issuesCell.className = 'cell';
       if (release.issues.length > 0) {
-        release.issues.forEach(issue => {
+        release.issues.forEach((issue) => {
           const issueLink = document.createElement('a');
           issueLink.href = issue.url;
           issueLink.target = '_blank';
@@ -332,80 +391,108 @@ function renderData(data, options = {}) {
 
   // If no releases are found, display a message
   if (!hasData) {
-    kanbanBoard.innerHTML += '<div class="cell" style="grid-column: span 3; text-align: center;">No releases found.</div>';
+    kanbanBoard.innerHTML +=
+      '<div class="cell" style="grid-column: span 3; text-align: center;">No releases found.</div>';
   }
 }
-
 
 // Global variable to store fetched data
 let fetchedData = [];
 
-// Event listener for the Save Token button
-document.getElementById('save-token-button').addEventListener('click', () => {
-  const token = document.getElementById('token-input').value.trim();
-  setGitHubToken(token);
-  alert('GitHub token saved.');
-  // Clear the token input field after saving
-  document.getElementById('token-input').value = '';
-});
-
-// Event listener for the Fetch All Releases button
-document.getElementById('fetch-button').addEventListener('click', async () => {
-  try {
-    const token = await getGitHubToken();
-
-    document.getElementById('status').textContent = 'Fetching data...';
-
-    // Get release count per repository from input
-    const releaseCountInput = document.getElementById('release-count').value;
-    const perRepoReleaseCount = releaseCountInput ? parseInt(releaseCountInput) : null;
-
-    const data = await fetchAllData(token, perRepoReleaseCount);
-
-    fetchedData = data; // Store data globally for filtering
-
-    renderData(fetchedData);
-
-    document.getElementById('status').textContent = 'Data fetched successfully';
-
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    document.getElementById('status').textContent = 'Error fetching data. See console for details.';
-  }
-});
-
-// Event listener for the Search button
-document.getElementById('search-button').addEventListener('click', () => {
-  const searchQuery = document.getElementById('search-input').value.trim();
-  const dateFilter = document.getElementById('date-filter').value;
-  const customDate = document.getElementById('custom-date').value;
-
-  renderData(fetchedData, { searchQuery, dateFilter, customDate });
-});
-
-// Event listener for the Reset button
-document.getElementById('reset-button').addEventListener('click', () => {
-  document.getElementById('search-input').value = '';
-  document.getElementById('date-filter').value = 'all';
-  document.getElementById('custom-date').value = '';
-  document.getElementById('custom-date').style.display = 'none';
-  document.getElementById('release-count').value = '';
-  renderData(fetchedData);
-});
-
-// Show/hide custom date input based on date filter selection
-document.getElementById('date-filter').addEventListener('change', (event) => {
-  const dateFilter = event.target.value;
-  const customDateInput = document.getElementById('custom-date');
-  if (dateFilter === 'custom') {
-    customDateInput.style.display = 'inline-block';
-  } else {
-    customDateInput.style.display = 'none';
-  }
-});
-
-// Initialize the extension
+// Initialize the extension after the DOM has fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-  // Other initialization tasks can go here if needed
-});
+  // Event listener for the Save Token button
+  document
+    .getElementById('save-token-button')
+    .addEventListener('click', () => {
+      const token = document.getElementById('token-input').value.trim();
+      setGitHubToken(token);
+      alert('GitHub token saved.');
+      // Clear the token input field after saving
+      document.getElementById('token-input').value = '';
+    });
 
+  // Event listener for the Fetch All Releases button
+  document.getElementById('fetch-button').addEventListener('click', async () => {
+    try {
+      const token = await getGitHubToken();
+
+      if (!token) {
+        alert(
+          'GitHub token is missing. Please enter your token and click "Save Token".'
+        );
+        return;
+      }
+
+      document.getElementById('status').textContent = 'Fetching data...';
+
+      // Get release count per repository from input
+      const releaseCountInput = document.getElementById('release-count').value;
+      const perRepoReleaseCount = releaseCountInput
+        ? parseInt(releaseCountInput)
+        : null;
+
+      const data = await fetchAllData(token, perRepoReleaseCount);
+
+      fetchedData = data; // Store data globally for filtering
+
+      renderData(fetchedData);
+
+      document.getElementById('status').textContent = 'Data fetched successfully';
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      document.getElementById('status').textContent =
+        'Error fetching data. See console for details.';
+    }
+  });
+
+  // Get references to the search input and date filter elements
+  const searchInput = document.getElementById('search-input');
+  const dateFilterSelect = document.getElementById('date-filter');
+  const customDateInput = document.getElementById('custom-date');
+
+  // Add event listener to the search input for real-time filtering
+  searchInput.addEventListener('input', () => {
+    const searchQuery = searchInput.value.trim();
+    const dateFilter = dateFilterSelect.value;
+    const customDate = customDateInput.value;
+
+    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+  });
+
+  // Add event listeners to date filters for real-time filtering
+  dateFilterSelect.addEventListener('change', () => {
+    const searchQuery = searchInput.value.trim();
+    const dateFilter = dateFilterSelect.value;
+    const customDate = customDateInput.value;
+
+    // Show/hide custom date input based on date filter selection
+    if (dateFilter === 'custom') {
+      customDateInput.style.display = 'inline-block';
+    } else {
+      customDateInput.style.display = 'none';
+    }
+
+    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+  });
+
+  customDateInput.addEventListener('input', () => {
+    const searchQuery = searchInput.value.trim();
+    const dateFilter = dateFilterSelect.value;
+    const customDate = customDateInput.value;
+
+    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+  });
+
+  // Event listener for the Reset button
+  document
+    .getElementById('reset-button')
+    .addEventListener('click', () => {
+      searchInput.value = '';
+      dateFilterSelect.value = 'all';
+      customDateInput.value = '';
+      customDateInput.style.display = 'none';
+      document.getElementById('release-count').value = '1'; // Set default value if needed
+      renderData(fetchedData);
+    });
+});
