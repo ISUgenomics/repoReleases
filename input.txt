@@ -31,5 +31,3 @@ https://github.com/ncbi/egapx
 https://github.com/djhshih/blat
 https://github.com/BenLangmead/bowtie2
 https://gitlab.com/ezlab/busco
-
-

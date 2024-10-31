@@ -67,14 +67,31 @@ async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
     ...(token && { 'Authorization': `token ${token}` })
   };
 
-  const response = await fetch(releasesUrl, { headers });
-  if (response.ok) {
-    return await response.json();
-  } else {
-    console.error(`Failed to fetch releases for ${owner}/${repo}`);
+  try {
+    const response = await fetch(releasesUrl, { headers });
+    if (response.ok) {
+      return await response.json();
+    } else {
+      // Log detailed error information
+      const errorData = await response.json();
+      console.error(`Failed to fetch releases for ${owner}/${repo}`);
+      console.error(`Status: ${response.status} ${response.statusText}`);
+      // Get rate limit headers
+      const rateLimit = response.headers.get('X-RateLimit-Limit');
+      const rateRemaining = response.headers.get('X-RateLimit-Remaining');
+      const rateReset = response.headers.get('X-RateLimit-Reset');
+      console.error(`Rate Limit: ${rateLimit}`);
+      console.error(`Rate Remaining: ${rateRemaining}`);
+      console.error(`Rate Reset: ${new Date(rateReset * 1000)}`);
+      console.error('Error Data:', errorData);
+      return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching releases for ${owner}/${repo}:`, error);
     return [];
   }
 }
+
 
 // Function to fetch issue details from GitHub API
 async function fetchIssue(owner, repo, issueNumber, token) {
@@ -83,14 +100,30 @@ async function fetchIssue(owner, repo, issueNumber, token) {
     'Accept': 'application/vnd.github.v3+json',
     ...(token && { 'Authorization': `token ${token}` })
   };
-  const response = await fetch(issueUrl, { headers });
-  if (response.ok) {
-    return await response.json();
-  } else {
-    console.error(`Failed to fetch issue #${issueNumber} for ${owner}/${repo}`);
+  try {
+    const response = await fetch(issueUrl, { headers });
+    if (response.ok) {
+      return await response.json();
+    } else {
+      const errorData = await response.json();
+      console.error(`Failed to fetch issue #${issueNumber} for ${owner}/${repo}`);
+      console.error(`Status: ${response.status} ${response.statusText}`);
+      // Get rate limit headers
+      const rateLimit = response.headers.get('X-RateLimit-Limit');
+      const rateRemaining = response.headers.get('X-RateLimit-Remaining');
+      const rateReset = response.headers.get('X-RateLimit-Reset');
+      console.error(`Rate Limit: ${rateLimit}`);
+      console.error(`Rate Remaining: ${rateRemaining}`);
+      console.error(`Rate Reset: ${new Date(rateReset * 1000)}`);
+      console.error('Error Data:', errorData);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error fetching issue #${issueNumber} for ${owner}/${repo}:`, error);
     return null;
   }
 }
+
 
 // Function to fetch all data
 // [Your existing code above...]
