@@ -525,25 +525,80 @@ function renderData(data, options = {}) {
 
       // Release Notes Cell
       const releaseNotesCell = document.createElement('div');
-      releaseNotesCell.className = 'cell markdown-content';
+      releaseNotesCell.className = 'cell collapsible';
+      releaseNotesCell.addEventListener('click', function () {
+        const content = this.querySelector('.content');
+        if (content.classList.contains('expanded')) {
+          // Collapse: show limited content
+          content.classList.remove('expanded');
+          content.innerHTML = content.getAttribute('data-limited-content');
+        } else {
+          // Expand: show full content
+          content.classList.add('expanded');
+          content.innerHTML = content.getAttribute('data-full-content');
+        }
+      });
+
+      // Create content div
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'content';
 
       // Parse and sanitize the release notes
       const releaseNotesMarkdown = release.release_body || 'No release notes.';
       const releaseNotesHTML = DOMPurify.sanitize(
         marked.parse(releaseNotesMarkdown)
       );
-      releaseNotesCell.innerHTML = releaseNotesHTML;
+
+      // Limit the displayed content (e.g., limit to 500 characters)
+      const maxChars = 500; // Adjust as needed
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = releaseNotesHTML;
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      let limitedText = textContent;
+      if (textContent.length > maxChars) {
+        limitedText = textContent.substring(0, maxChars) + '\n\n**[Click to expand]**';
+      }
+
+      // Convert limitedText back to HTML
+      const limitedReleaseNotesHTML = DOMPurify.sanitize(
+        marked.parse(limitedText)
+      );
+
+      contentDiv.innerHTML = limitedReleaseNotesHTML;
+
+      // Store full and limited content in data attributes
+      contentDiv.setAttribute('data-full-content', releaseNotesHTML);
+      contentDiv.setAttribute('data-limited-content', limitedReleaseNotesHTML);
+
+      releaseNotesCell.appendChild(contentDiv);
       kanbanBoard.appendChild(releaseNotesCell);
 
       // Issues Fixed Cell
       const issuesCell = document.createElement('div');
-      issuesCell.className = 'cell';
-      if (release.issues.length > 0) {
-        release.issues.forEach((issue) => {
-          const issueLink = document.createElement('a');
-          issueLink.href = issue.url;
-          issueLink.target = '_blank';
+      issuesCell.className = 'cell collapsible';
+      issuesCell.addEventListener('click', function () {
+        const content = this.querySelector('.content');
+        if (content.classList.contains('expanded')) {
+          // Collapse: show limited content
+          content.classList.remove('expanded');
+          content.innerHTML = content.getAttribute('data-limited-content');
+        } else {
+          // Expand: show full content
+          content.classList.add('expanded');
+          content.innerHTML = content.getAttribute('data-full-content');
+        }
+      });
 
+      // Create content div
+      const issuesContentDiv = document.createElement('div');
+      issuesContentDiv.className = 'content';
+
+      let fullIssuesHTML = '';
+      let limitedIssuesHTML = '';
+      const maxIssuesToShow = 5; // Adjust as needed
+
+      if (release.issues.length > 0) {
+        release.issues.forEach((issue, index) => {
           let issueTypeLabel = '';
           if (issue.type === 'issue') {
             issueTypeLabel = 'Issue';
@@ -560,33 +615,51 @@ function renderData(data, options = {}) {
             issueText = `${issue.owner}/${issue.repo} ${issueTypeLabel} #${issue.number}: ${issue.title}`;
           }
 
-          issueLink.textContent = issueText;
-          issuesCell.appendChild(issueLink);
-          issuesCell.appendChild(document.createElement('br'));
+          const issueHTML = `<a href="${issue.url}" target="_blank">${issueText}</a><br>`;
+
+          fullIssuesHTML += issueHTML;
+          if (index < maxIssuesToShow) {
+            limitedIssuesHTML += issueHTML;
+          }
         });
+
+        // If there are more issues than maxIssuesToShow, add an ellipsis
+        if (release.issues.length > maxIssuesToShow) {
+          limitedIssuesHTML += '<br><br><strong>[Click to expand]</strong>';
+        }
       } else {
-        issuesCell.textContent = 'No issues linked.';
+        fullIssuesHTML = 'No issues linked.';
+        limitedIssuesHTML = fullIssuesHTML;
       }
+
+      issuesContentDiv.innerHTML = limitedIssuesHTML;
+
+      // Store full and limited content in data attributes
+      issuesContentDiv.setAttribute('data-full-content', fullIssuesHTML);
+      issuesContentDiv.setAttribute('data-limited-content', limitedIssuesHTML);
+
+      issuesCell.appendChild(issuesContentDiv);
       kanbanBoard.appendChild(issuesCell);
     });
   });
 
-    // Update the total count in the HTML
-    const totalCountElement = document.getElementById('total-count');
-    if (totalCountElement) {
-      if (hasData) {
-        totalCountElement.textContent = `Total items displayed: ${totalItems}`;
-      } else {
-        totalCountElement.textContent = 'No items to display.';
-      }
+  // Update the total count in the HTML
+  const totalCountElement = document.getElementById('total-count');
+  if (totalCountElement) {
+    if (hasData) {
+      totalCountElement.textContent = `Total items displayed: ${totalItems}`;
+    } else {
+      totalCountElement.textContent = 'No items to display.';
     }
-  
+  }
+
   // If no releases are found, display a message
   if (!hasData) {
     kanbanBoard.innerHTML +=
       '<div class="cell" style="grid-column: span 3; text-align: center;">No releases found.</div>';
   }
 }
+
 
 // Global variable to store fetched data
 let fetchedData = [];

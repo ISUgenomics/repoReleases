@@ -1,0 +1,66 @@
+/* popup.css */
+
+/* Set the grid layout for the kanban board */
+#kanban-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Three equal columns */
+    gap: 10px;
+  }
+  
+  /* Style for each cell */
+  .cell {
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Fixed height for cells */
+  .cell {
+    height: 150px; /* Adjust the height as needed */
+  }
+  
+  /* Collapsible content */
+  .cell.collapsible .content {
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+  }
+  
+  /* Add ellipsis after a certain number of lines */
+  .cell.collapsible .content {
+    display: -webkit-box;
+    -webkit-line-clamp: 5; /* Number of lines to show */
+    -webkit-box-orient: vertical;
+  }
+  
+  .cell.collapsible .content.expanded {
+    display: block;
+    max-height: none;
+  }
+  
+  .cell.collapsible .content::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px; /* Adjust as needed */
+    background: linear-gradient(to bottom, transparent, white);
+  }
+  
+  .cell.collapsible .content.expanded::after {
+    display: none;
+  }
+  
+  /* Cursor change on hover */
+  .cell.collapsible {
+    cursor: pointer;
+  }
+  
+  /* Style for header cells */
+  .cell.header {
+    background-color: #f0f0f0;
+    font-weight: bold;
+  }
+  
