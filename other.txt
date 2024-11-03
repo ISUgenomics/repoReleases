@@ -1,0 +1,12 @@
+https://mafft.cbrc.jp/alignment/software/
+https://meme-suite.org/meme/
+https://software.bioinformatics.unibe.ch/pgdspider/
+https://phylipweb.github.io/phylip/
+https://www.cog-genomics.org/plink2/
+https://www.repeatmasker.org
+https://www.repeatmasker.org/RepeatModeler/
+http://catchenlab.life.illinois.edu/stacks/
+https://tassel.bitbucket.io
+http://www.vmatch.de
+
+https://github.com/nadegeguiglielmoni/genome_assembly_tools/tree/main?tab=readme-ov-file

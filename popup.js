@@ -53,7 +53,7 @@ function extractOwnerRepo(url) {
 // Function to fetch releases from GitHub API, with limit per repository
 async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   let releasesUrl = `https://api.github.com/repos/${owner}/${repo}/releases`;
-  
+
   const params = new URLSearchParams();
 
   // If perRepoReleaseCount is specified, set per_page parameter
@@ -95,34 +95,99 @@ async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   }
 }
 
-// Function to fetch issue details from GitHub API
-async function fetchIssue(owner, repo, issueNumber, token) {
+// Function to fetch issue or discussion details from GitHub API
+async function fetchIssueOrDiscussion(owner, repo, issueNumber, token) {
+  // Try to fetch as an Issue first
   const issueUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
   const headers = {
     Accept: 'application/vnd.github.v3+json',
     ...(token && { Authorization: `token ${token}` }),
   };
   try {
-    const response = await fetch(issueUrl, { headers });
+    let response = await fetch(issueUrl, { headers });
     if (response.ok) {
-      return await response.json();
+      const issueData = await response.json();
+      return { ...issueData, type: 'issue' };
     } else {
-      const errorData = await response.json();
-      console.error(`Failed to fetch issue #${issueNumber} for ${owner}/${repo}`);
-      console.error(`Status: ${response.status} ${response.statusText}`);
-      // Get rate limit headers
-      const rateLimit = response.headers.get('X-RateLimit-Limit');
-      const rateRemaining = response.headers.get('X-RateLimit-Remaining');
-      const rateReset = response.headers.get('X-RateLimit-Reset');
-      console.error(`Rate Limit: ${rateLimit}`);
-      console.error(`Rate Remaining: ${rateRemaining}`);
-      console.error(`Rate Reset: ${new Date(rateReset * 1000)}`);
-      console.error('Error Data:', errorData);
+      // Try to fetch as a Pull Request
+      const prUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${issueNumber}`;
+      response = await fetch(prUrl, { headers });
+      if (response.ok) {
+        const prData = await response.json();
+        return { ...prData, type: 'pull_request' };
+      } else {
+        // Try to fetch as a Discussion via GraphQL API
+        const discussionData = await fetchDiscussion(owner, repo, issueNumber, token);
+        if (discussionData) {
+          // Return a similar object to issueData
+          return { ...discussionData, type: 'discussion' };
+        } else {
+          // Reference not found; simply return null without logging an error
+          return null;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(
+      `Error fetching issue/PR/discussion #${issueNumber} for ${owner}/${repo}:`,
+      error
+    );
+    return null;
+  }
+}
+
+// Function to fetch a discussion via GraphQL API
+async function fetchDiscussion(owner, repo, discussionNumber, token) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `bearer ${token}` }), // Note 'bearer' instead of 'token'
+  };
+
+  const query = `
+    query($owner: String!, $repo: String!, $number: Int!) {
+      repository(owner: $owner, name: $repo) {
+        discussion(number: $number) {
+          number
+          title
+          url
+          body
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    owner: owner,
+    repo: repo,
+    number: parseInt(discussionNumber),
+  };
+
+  try {
+    const response = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ query: query, variables: variables }),
+    });
+
+    if (response.ok) {
+      const json = await response.json();
+      if (
+        json.data &&
+        json.data.repository &&
+        json.data.repository.discussion
+      ) {
+        return json.data.repository.discussion;
+      } else {
+        // Discussion not found; return null without logging an error
+        return null;
+      }
+    } else {
+      // Handle GraphQL errors gracefully
       return null;
     }
   } catch (error) {
     console.error(
-      `Error fetching issue #${issueNumber} for ${owner}/${repo}:`,
+      `Error fetching discussion #${discussionNumber} for ${owner}/${repo}:`,
       error
     );
     return null;
@@ -186,7 +251,7 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
       const issuesInfo = [];
 
       for (const issueRef of uniqueIssueReferences) {
-        const issueData = await fetchIssue(
+        const issueData = await fetchIssueOrDiscussion(
           issueRef.owner,
           issueRef.repo,
           issueRef.number,
@@ -196,11 +261,13 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
           issuesInfo.push({
             number: issueData.number,
             title: issueData.title,
-            url: issueData.html_url,
+            url: issueData.html_url || issueData.url,
             owner: issueRef.owner,
             repo: issueRef.repo,
+            type: issueData.type,
           });
         }
+        // If issueData is null, continue without adding
       }
 
       allReleasesData.push({
@@ -323,16 +390,12 @@ function renderData(data, options = {}) {
       const softwareCell = document.createElement('div');
       softwareCell.className = 'cell';
 
-     
-
-
       // Create software name element as a link
       const softwareNameLink = document.createElement('a');
       softwareNameLink.className = 'software-name';
       softwareNameLink.textContent = `${release.owner}/${release.repo}`;
       softwareNameLink.href = `https://github.com/${release.owner}/${release.repo}`;
       softwareNameLink.target = '_blank';
-
 
       // Create release number element
       const releaseNumber = document.createElement('div');
@@ -373,9 +436,20 @@ function renderData(data, options = {}) {
           issueLink.href = issue.url;
           issueLink.target = '_blank';
 
-          let issueText = `#${issue.number}: ${issue.title}`;
+          let issueTypeLabel = '';
+          if (issue.type === 'issue') {
+            issueTypeLabel = 'Issue';
+          } else if (issue.type === 'pull_request') {
+            issueTypeLabel = 'Pull Request';
+          } else if (issue.type === 'discussion') {
+            issueTypeLabel = 'Discussion';
+          } else {
+            issueTypeLabel = 'Item';
+          }
+
+          let issueText = `${issueTypeLabel} #${issue.number}: ${issue.title}`;
           if (issue.owner !== release.owner || issue.repo !== release.repo) {
-            issueText = `${issue.owner}/${issue.repo}#${issue.number}: ${issue.title}`;
+            issueText = `${issue.owner}/${issue.repo} ${issueTypeLabel} #${issue.number}: ${issue.title}`;
           }
 
           issueLink.textContent = issueText;
