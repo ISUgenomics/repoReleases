@@ -481,11 +481,14 @@ function renderData(data, options = {}) {
 
   // Render the data
   let hasData = false;
+  let totalItems = 0; // Initialize the total count
+
   repoArray.forEach((repoData) => {
     const { repoName, releases } = repoData;
 
     releases.forEach((release) => {
       hasData = true;
+      totalItems++; // Increment totalItems for each release rendered
 
       // Software Name Cell
       const softwareCell = document.createElement('div');
@@ -568,6 +571,16 @@ function renderData(data, options = {}) {
     });
   });
 
+    // Update the total count in the HTML
+    const totalCountElement = document.getElementById('total-count');
+    if (totalCountElement) {
+      if (hasData) {
+        totalCountElement.textContent = `Total items displayed: ${totalItems}`;
+      } else {
+        totalCountElement.textContent = 'No items to display.';
+      }
+    }
+  
   // If no releases are found, display a message
   if (!hasData) {
     kanbanBoard.innerHTML +=

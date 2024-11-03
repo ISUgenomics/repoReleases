@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GitHub Releases Kanban</title>
+  <title>GitHub Repo Releases</title>
   <style>
     body {
       margin: 0;
@@ -124,6 +124,10 @@
   <label for="release-count">Number of releases to display per repository:</label>
   <input type="number" id="release-count" min="1" value="1" placeholder="e.g., 1 for latest release">
   <br>
+
+  <!-- Place this where you want the total count to appear -->
+  <div id="total-count" style="font-weight: bold; margin-bottom: 10px;"></div>
+
 
   <!-- Kanban Board -->
   <div class="kanban-board" id="kanban-board">
