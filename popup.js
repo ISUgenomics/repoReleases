@@ -95,6 +95,71 @@ async function fetchReleases(owner, repo, token, perRepoReleaseCount = null) {
   }
 }
 
+// Function to fetch tags from GitHub API
+async function fetchTags(owner, repo, token, perRepoTagCount = null) {
+  let tagsUrl = `https://api.github.com/repos/${owner}/${repo}/tags`;
+
+  const params = new URLSearchParams();
+
+  // If perRepoTagCount is specified, set per_page parameter
+  if (perRepoTagCount) {
+    params.append('per_page', perRepoTagCount);
+  }
+
+  if (params.toString()) {
+    tagsUrl += `?${params.toString()}`;
+  }
+
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+    ...(token && { Authorization: `token ${token}` }),
+  };
+
+  try {
+    const response = await fetch(tagsUrl, { headers });
+    if (response.ok) {
+      return await response.json();
+    } else {
+      // Log detailed error information
+      const errorData = await response.json();
+      console.error(`Failed to fetch tags for ${owner}/${repo}`);
+      console.error(`Status: ${response.status} ${response.statusText}`);
+      console.error('Error Data:', errorData);
+      return [];
+    }
+  } catch (error) {
+    console.error(`Error fetching tags for ${owner}/${repo}:`, error);
+    return [];
+  }
+}
+
+// Function to fetch commit details from GitHub API
+async function fetchCommit(owner, repo, sha, token) {
+  const commitUrl = `https://api.github.com/repos/${owner}/${repo}/commits/${sha}`;
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+    ...(token && { Authorization: `token ${token}` }),
+  };
+  try {
+    const response = await fetch(commitUrl, { headers });
+    if (response.ok) {
+      return await response.json();
+    } else {
+      const errorData = await response.json();
+      console.error(`Failed to fetch commit ${sha} for ${owner}/${repo}`);
+      console.error(`Status: ${response.status} ${response.statusText}`);
+      console.error('Error Data:', errorData);
+      return null;
+    }
+  } catch (error) {
+    console.error(
+      `Error fetching commit ${sha} for ${owner}/${repo}:`,
+      error
+    );
+    return null;
+  }
+}
+
 // Function to fetch issue or discussion details from GitHub API
 async function fetchIssueOrDiscussion(owner, repo, issueNumber, token) {
   // Try to fetch as an Issue first
@@ -204,84 +269,120 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
     if (!ownerRepo) continue;
     const { owner, repo } = ownerRepo;
 
-    const releases = await fetchReleases(
+    let releases = await fetchReleases(
       owner,
       repo,
       token,
       perRepoReleaseCount
     );
 
-    for (const release of releases) {
-      const releaseBody = release.body || '';
+    // Check if releases are found
+    if (releases.length === 0) {
+      // No releases found, fetch tags instead
+      console.log(`No releases found for ${owner}/${repo}. Fetching tags instead.`);
+      const tags = await fetchTags(owner, repo, token, perRepoReleaseCount);
 
-      // Extract issue references from the release body
-      const issueReferences = [];
-      const regex = /(\b[\w\-]+\/[\w\-]+)?#(\d+)/g;
-      let match;
+      for (const tag of tags) {
+        // Fetch commit associated with the tag to get commit message
+        const commitData = await fetchCommit(owner, repo, tag.commit.sha, token);
 
-      while ((match = regex.exec(releaseBody)) !== null) {
-        const fullRepo = match[1]; // May be undefined
-        const issueNumber = match[2];
+        if (!commitData) continue;
 
-        let issueOwner = owner;
-        let issueRepo = repo;
+        const releaseBody = commitData.commit.message || '';
+        const publishedAt = commitData.commit.author.date || null;
 
-        if (fullRepo) {
-          const [refOwner, refRepo] = fullRepo.split('/');
-          issueOwner = refOwner;
-          issueRepo = refRepo;
-        }
-
-        issueReferences.push({
-          owner: issueOwner,
-          repo: issueRepo,
-          number: issueNumber,
-        });
-      }
-
-      // Remove duplicate issue references
-      const uniqueIssueReferences = issueReferences.filter(
-        (v, i, a) =>
-          a.findIndex(
-            (t) =>
-              t.owner === v.owner && t.repo === v.repo && t.number === v.number
-          ) === i
-      );
-
-      const issuesInfo = [];
-
-      for (const issueRef of uniqueIssueReferences) {
-        const issueData = await fetchIssueOrDiscussion(
-          issueRef.owner,
-          issueRef.repo,
-          issueRef.number,
-          token
+        // Process as a release
+        await processReleaseOrTag(
+          owner,
+          repo,
+          {
+            name: tag.name,
+            body: releaseBody,
+            published_at: publishedAt,
+          },
+          token,
+          allReleasesData
         );
-        if (issueData) {
-          issuesInfo.push({
-            number: issueData.number,
-            title: issueData.title,
-            url: issueData.html_url || issueData.url,
-            owner: issueRef.owner,
-            repo: issueRef.repo,
-            type: issueData.type,
-          });
-        }
-        // If issueData is null, continue without adding
       }
-
-      allReleasesData.push({
-        owner: owner,
-        repo: repo,
-        release_name: release.name || 'No Release Name',
-        release_body: releaseBody,
-        issues: issuesInfo,
-        published_at: release.published_at || release.created_at,
-      });
+    } else {
+      // Process releases
+      for (const release of releases) {
+        await processReleaseOrTag(owner, repo, release, token, allReleasesData);
+      }
     }
   }
 
   return allReleasesData;
+}
+
+// Helper function to process a release or tag
+async function processReleaseOrTag(owner, repo, release, token, allReleasesData) {
+  const releaseBody = release.body || '';
+
+  // Extract issue references from the release body
+  const issueReferences = [];
+  const regex = /(\b[\w\-]+\/[\w\-]+)?#(\d+)/g;
+  let match;
+
+  while ((match = regex.exec(releaseBody)) !== null) {
+    const fullRepo = match[1]; // May be undefined
+    const issueNumber = match[2];
+
+    let issueOwner = owner;
+    let issueRepo = repo;
+
+    if (fullRepo) {
+      const [refOwner, refRepo] = fullRepo.split('/');
+      issueOwner = refOwner;
+      issueRepo = refRepo;
+    }
+
+    issueReferences.push({
+      owner: issueOwner,
+      repo: issueRepo,
+      number: issueNumber,
+    });
+  }
+
+  // Remove duplicate issue references
+  const uniqueIssueReferences = issueReferences.filter(
+    (v, i, a) =>
+      a.findIndex(
+        (t) =>
+          t.owner === v.owner && t.repo === v.repo && t.number === v.number
+      ) === i
+  );
+
+  const issuesInfo = [];
+
+  for (const issueRef of uniqueIssueReferences) {
+    const issueData = await fetchIssueOrDiscussion(
+      issueRef.owner,
+      issueRef.repo,
+      issueRef.number,
+      token
+    );
+    if (issueData) {
+      issuesInfo.push({
+        number: issueData.number,
+        title: issueData.title,
+        url: issueData.html_url || issueData.url,
+        owner: issueRef.owner,
+        repo: issueRef.repo,
+        type: issueData.type,
+      });
+    }
+    // If issueData is null, continue without adding
+  }
+
+  allReleasesData.push({
+    owner: owner,
+    repo: repo,
+    release_name: release.name || 'No Release Name',
+    release_body: releaseBody,
+    issues: issuesInfo,
+    published_at: release.published_at || release.created_at || null,
+  });
 }
 
 // Function to render the data
@@ -405,8 +506,12 @@ function renderData(data, options = {}) {
       // Create release date element
       const releaseDate = document.createElement('div');
       releaseDate.className = 'release-date';
-      const releaseDateObj = new Date(release.published_at);
-      releaseDate.textContent = releaseDateObj.toLocaleDateString();
+      const releaseDateObj = release.published_at
+        ? new Date(release.published_at)
+        : null;
+      releaseDate.textContent = releaseDateObj
+        ? releaseDateObj.toLocaleDateString()
+        : 'No Date';
 
       // Append elements to software cell
       softwareCell.appendChild(softwareNameLink);
