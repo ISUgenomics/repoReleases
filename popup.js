@@ -182,7 +182,12 @@ async function fetchIssueOrDiscussion(owner, repo, issueNumber, token) {
         return { ...prData, type: 'pull_request' };
       } else {
         // Try to fetch as a Discussion via GraphQL API
-        const discussionData = await fetchDiscussion(owner, repo, issueNumber, token);
+        const discussionData = await fetchDiscussion(
+          owner,
+          repo,
+          issueNumber,
+          token
+        );
         if (discussionData) {
           // Return a similar object to issueData
           return { ...discussionData, type: 'discussion' };
@@ -279,12 +284,19 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
     // Check if releases are found
     if (releases.length === 0) {
       // No releases found, fetch tags instead
-      console.log(`No releases found for ${owner}/${repo}. Fetching tags instead.`);
+      console.log(
+        `No releases found for ${owner}/${repo}. Fetching tags instead.`
+      );
       const tags = await fetchTags(owner, repo, token, perRepoReleaseCount);
 
       for (const tag of tags) {
         // Fetch commit associated with the tag to get commit message
-        const commitData = await fetchCommit(owner, repo, tag.commit.sha, token);
+        const commitData = await fetchCommit(
+          owner,
+          repo,
+          tag.commit.sha,
+          token
+        );
 
         if (!commitData) continue;
 
@@ -316,7 +328,13 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
 }
 
 // Helper function to process a release or tag
-async function processReleaseOrTag(owner, repo, release, token, allReleasesData) {
+async function processReleaseOrTag(
+  owner,
+  repo,
+  release,
+  token,
+  allReleasesData
+) {
   const releaseBody = release.body || '';
 
   // Extract issue references from the release body
@@ -383,6 +401,22 @@ async function processReleaseOrTag(owner, repo, release, token, allReleasesData)
     issues: issuesInfo,
     published_at: release.published_at || release.created_at || null,
   });
+}
+
+// Function to limit Markdown content by lines
+function limitMarkdownContentByLines(markdownContent, maxLines) {
+  const lines = markdownContent.split('\n');
+  const limitedLines = lines.slice(0, maxLines);
+  let limitedMarkdown = limitedLines.join('\n');
+
+  // Check if content was truncated
+  const contentTruncated = lines.length > maxLines;
+
+  if (contentTruncated) {
+    limitedMarkdown += '\n\n**[Click to expand]**';
+  }
+
+  return limitedMarkdown;
 }
 
 // Function to render the data
@@ -543,31 +577,30 @@ function renderData(data, options = {}) {
       const contentDiv = document.createElement('div');
       contentDiv.className = 'content';
 
-      // Parse and sanitize the release notes
+      // Get the original Markdown source
       const releaseNotesMarkdown = release.release_body || 'No release notes.';
-      const releaseNotesHTML = DOMPurify.sanitize(
-        marked.parse(releaseNotesMarkdown)
+
+      // Limit the Markdown content by lines
+      const maxLines = 10; // Adjust as needed
+      const limitedMarkdown = limitMarkdownContentByLines(
+        releaseNotesMarkdown,
+        maxLines
       );
 
-      // Limit the displayed content (e.g., limit to 500 characters)
-      const maxChars = 500; // Adjust as needed
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = releaseNotesHTML;
-      const textContent = tempDiv.textContent || tempDiv.innerText || '';
-      let limitedText = textContent;
-      if (textContent.length > maxChars) {
-        limitedText = textContent.substring(0, maxChars) + '\n\n**[Click to expand]**';
-      }
-
-      // Convert limitedText back to HTML
+      // Convert limitedMarkdown to HTML
       const limitedReleaseNotesHTML = DOMPurify.sanitize(
-        marked.parse(limitedText)
+        marked.parse(limitedMarkdown)
+      );
+
+      // Also get the full HTML content
+      const fullReleaseNotesHTML = DOMPurify.sanitize(
+        marked.parse(releaseNotesMarkdown)
       );
 
       contentDiv.innerHTML = limitedReleaseNotesHTML;
 
       // Store full and limited content in data attributes
-      contentDiv.setAttribute('data-full-content', releaseNotesHTML);
+      contentDiv.setAttribute('data-full-content', fullReleaseNotesHTML);
       contentDiv.setAttribute('data-limited-content', limitedReleaseNotesHTML);
 
       releaseNotesCell.appendChild(contentDiv);
@@ -593,44 +626,44 @@ function renderData(data, options = {}) {
       const issuesContentDiv = document.createElement('div');
       issuesContentDiv.className = 'content';
 
-      let fullIssuesHTML = '';
-      let limitedIssuesHTML = '';
-      const maxIssuesToShow = 5; // Adjust as needed
-
-      if (release.issues.length > 0) {
-        release.issues.forEach((issue, index) => {
-          let issueTypeLabel = '';
-          if (issue.type === 'issue') {
-            issueTypeLabel = 'Issue';
-          } else if (issue.type === 'pull_request') {
-            issueTypeLabel = 'Pull Request';
-          } else if (issue.type === 'discussion') {
-            issueTypeLabel = 'Discussion';
-          } else {
-            issueTypeLabel = 'Item';
-          }
-
-          let issueText = `${issueTypeLabel} #${issue.number}: ${issue.title}`;
-          if (issue.owner !== release.owner || issue.repo !== release.repo) {
-            issueText = `${issue.owner}/${issue.repo} ${issueTypeLabel} #${issue.number}: ${issue.title}`;
-          }
-
-          const issueHTML = `<a href="${issue.url}" target="_blank">${issueText}</a><br>`;
-
-          fullIssuesHTML += issueHTML;
-          if (index < maxIssuesToShow) {
-            limitedIssuesHTML += issueHTML;
-          }
-        });
-
-        // If there are more issues than maxIssuesToShow, add an ellipsis
-        if (release.issues.length > maxIssuesToShow) {
-          limitedIssuesHTML += '<br><br><strong>[Click to expand]</strong>';
+      // Build the issues content as Markdown
+      let issuesMarkdown = '';
+      release.issues.forEach((issue) => {
+        let issueTypeLabel = '';
+        if (issue.type === 'issue') {
+          issueTypeLabel = 'Issue';
+        } else if (issue.type === 'pull_request') {
+          issueTypeLabel = 'Pull Request';
+        } else if (issue.type === 'discussion') {
+          issueTypeLabel = 'Discussion';
+        } else {
+          issueTypeLabel = 'Item';
         }
-      } else {
-        fullIssuesHTML = 'No issues linked.';
-        limitedIssuesHTML = fullIssuesHTML;
+
+        let issueText = `${issueTypeLabel} #${issue.number}: ${issue.title}`;
+        if (issue.owner !== release.owner || issue.repo !== release.repo) {
+          issueText = `${issue.owner}/${issue.repo} ${issueTypeLabel} #${issue.number}: ${issue.title}`;
+        }
+
+        issuesMarkdown += `- [${issueText}](${issue.url})\n`;
+      });
+
+      if (issuesMarkdown === '') {
+        issuesMarkdown = 'No issues linked.';
       }
+
+      // Limit the issues content by lines
+      const maxIssueLines = 10; // Adjust as needed
+      const limitedIssuesMarkdown = limitMarkdownContentByLines(
+        issuesMarkdown,
+        maxIssueLines
+      );
+
+      // Convert Markdown to HTML
+      const fullIssuesHTML = DOMPurify.sanitize(marked.parse(issuesMarkdown));
+      const limitedIssuesHTML = DOMPurify.sanitize(
+        marked.parse(limitedIssuesMarkdown)
+      );
 
       issuesContentDiv.innerHTML = limitedIssuesHTML;
 
@@ -750,14 +783,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Event listener for the Reset button
-  document
-    .getElementById('reset-button')
-    .addEventListener('click', () => {
-      searchInput.value = '';
-      dateFilterSelect.value = 'all';
-      customDateInput.value = '';
-      customDateInput.style.display = 'none';
-      document.getElementById('release-count').value = '1'; // Set default value if needed
-      renderData(fetchedData);
-    });
+  document.getElementById('reset-button').addEventListener('click', () => {
+    searchInput.value = '';
+    dateFilterSelect.value = 'all';
+    customDateInput.value = '';
+    customDateInput.style.display = 'none';
+    document.getElementById('release-count').value = '1'; // Set default value if needed
+    renderData(fetchedData);
+  });
 });
