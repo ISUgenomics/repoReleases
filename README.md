@@ -26,5 +26,5 @@ Briefly,
 4) load unpacked (upper left), choose the kanban github repo you just downloaded.
 5) Now that it is loaded you can select it in the chrome extensions toolbar in the upper right (kind of looks like a puzzle piece.
 
-once you have entered your token, you should just be able to click on the fetch issues the next time you open the window as your token is now saved locally.
+once you have entered your token and click `Save Token`, you should just be able to click on  `Fetch All Releases` the next time you open the window as your token is now saved locally.
 
