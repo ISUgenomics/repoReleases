@@ -1,85 +1,86 @@
-https://github.com/bactopia/bactopia
-https://github.com/Gaius-Augustus/BRAKER
-https://github.com/bbuchfink/diamond
-https://github.com/nanoporetech/dorado
-https://github.com/nanoporetech/medaka
-https://github.com/alekseyzimin/masurca
-https://github.com/nextflow-io/nextflow
-https://github.com/picrust/picrust2
-https://github.com/tseemann/prokka
-https://github.com/revbayes/revbayes
-https://github.com/rstudio/rstudio
-https://github.com/satijalab/seurat
-https://github.com/snakemake/snakemake
-https://github.com/bcgsc/abyss
-https://github.com/apptainer/apptainer
-https://github.com/Gaius-Augustus/Augustus
-https://github.com/pezmaster31/bamtools
-https://github.com/statgen/bamUtil
-https://github.com/BioInfoTools/BBMap
-https://github.com/samtools/bcftools
-https://github.com/samtools
-https://github.com/beagle-dev/beagle-lib
-https://github.com/lh3/bioawk
-https://github.com/ncbi/sra-tools
-https://github.com/ncbi/pgap
-https://github.com/ncbi/ncbi-cxx-toolkit-public
-https://github.com/ncbi/datasets
-https://github.com/ncbi/egapx
-https://github.com/djhshih/blat
-https://github.com/BenLangmead/bowtie2
-https://gitlab.com/ezlab/busco
-https://github.com/marbl/canu
-https://github.com/weizhongli/cdhit
-https://github.com/rambaut/figtree
-https://github.com/Gabaldonlab/redundans
-https://github.com/broadinstitute/gatk/
-https://github.com/gatech-genemark/GeneMark-ETP
-https://github.com/gatech-genemark/MetaGeneMark-2
-https://github.com/gatech-genemark/GeneMarkHmmEukaryotic3
-https://github.com/genometools/genometools
-https://github.com/EddyRivasLab/hmmer
-https://github.com/igvteam/igv
-https://github.com/jqlang/jq
-https://github.com/pachterlab/kallisto
-https://github.com/lh3/minimap2
-https://github.com/NBISweden/MrBayes
-https://github.com/rcedgar/muscle
-https://github.com/nbcrrolls/namd
-https://github.com/davidemms/OrthoFinder
-https://github.com/abacus-gene/paml
-https://github.com/broadinstitute/picard
-https://github.com/GELOG/plink/
-https://github.com/hyattpd/Prodigal
-https://github.com/amkozlov/raxml-ng
-https://github.com/chhylp123/hifiasm
-https://github.com/revbayes/revbayes
-https://github.com/ablab/rnaquast
-https://github.com/COMBINE-lab/salmon
-https://github.com/lh3/seqtk
-https://github.com/lh3/tabtk
-https://github.com/lh3/yak
-https://github.com/thlee/SNPhylo
-https://github.com/aquaskyline/SOAPdenovo2
-https://github.com/ablab/spades
-https://github.com/alexdobin/STAR
-https://github.com/gpertea/stringtie
-https://github.com/rajanil/fastStructure
-https://github.com/ShiLab-Bioinformatics/subread
-https://github.com/TransDecoder/TransDecoder
-https://github.com/Benson-Genomics-Lab/TRF
-https://github.com/FelixKrueger/TrimGalore
-https://github.com/usadellab/Trimmomatic
-https://github.com/trinityrnaseq/trinityrnaseq
-https://github.com/Trinotate/Trinotate
-https://github.com/UCSC-LoweLab/tRNAscan-SE
-https://github.com/dkoboldt/varscan
-https://github.com/vcftools/vcftools
-https://github.com/dzerbino/velvet
-https://github.com/torognes/vsearch
-https://github.com/madler/pigz
-https://github.com/nathanweeks/exonerate
-https://github.com/pcingola/SnpEff
-https://github.com/jgm/pandoc
-https://github.com/esteinig/nanoq
-https://github.com/wdecoster/NanoPlot
+https://github.com/picrust/picrust2	Metagenomics
+https://github.com/ncbi/pgap    Functional_Prediction
+https://github.com/hyattpd/Prodigal	Functional_Prediction
+https://github.com/TransDecoder/TransDecoder	Functional_Prediction
+https://github.com/Benson-Genomics-Lab/TRF	Functional_Prediction
+https://github.com/Trinotate/Trinotate	RNA_Analysis
+https://github.com/Gaius-Augustus/BRAKER	Genome_Assembly_and_Annotation
+https://github.com/alekseyzimin/masurca	Genome_Assembly_and_Annotation
+https://github.com/tseemann/prokka	Genome_Assembly_and_Annotation
+https://github.com/bcgsc/abyss	Genome_Assembly_and_Annotation
+https://github.com/Gaius-Augustus/Augustus	Genome_Assembly_and_Annotation
+https://gitlab.com/ezlab/busco	Genome_Assembly_and_Annotation
+https://github.com/marbl/canu	Genome_Assembly_and_Annotation
+https://github.com/Gabaldonlab/redundans	Genome_Assembly_and_Annotation
+https://github.com/gatech-genemark/GeneMark-ETP	Genome_Assembly_and_Annotation
+https://github.com/gatech-genemark/MetaGeneMark-2	Genome_Assembly_and_Annotation
+https://github.com/gatech-genemark/GeneMarkHmmEukaryotic3	Genome_Assembly_and_Annotation
+https://github.com/genometools/genometools	Genome_Assembly_and_Annotation
+https://github.com/chhylp123/hifiasm	Genome_Assembly_and_Annotation
+https://github.com/aquaskyline/SOAPdenovo2	Genome_Assembly_and_Annotation
+https://github.com/ablab/spades	Genome_Assembly_and_Annotation
+https://github.com/trinityrnaseq/trinityrnaseq	RNA_Analysis
+https://github.com/UCSC-LoweLab/tRNAscan-SE	Genome_Assembly_and_Annotation
+https://github.com/dzerbino/velvet	Genome_Assembly_and_Annotation
+https://github.com/nanoporetech/dorado	Genome_Assembly_and_Annotation
+https://github.com/nanoporetech/medaka	Genome_Assembly_and_Annotation
+https://github.com/rstudio/rstudio	Miscellaneous_and_Utilities
+https://github.com/apptainer/apptainer	Miscellaneous_and_Utilities
+https://github.com/lh3/bioawk	Miscellaneous_and_Utilities
+https://github.com/ncbi/sra-tools	Miscellaneous_and_Utilities
+https://github.com/ncbi/ncbi-cxx-toolkit-public	Miscellaneous_and_Utilities
+https://github.com/ncbi/datasets	Miscellaneous_and_Utilities
+https://github.com/ncbi/egapx	Genome_Assembly_and_Annotation
+https://github.com/jqlang/jq	Miscellaneous_and_Utilities
+https://github.com/madler/pigz	Miscellaneous_and_Utilities
+https://github.com/jgm/pandoc	Miscellaneous_and_Utilities
+https://github.com/revbayes/revbayes	Phylogenetic_and_Population_Genetics
+https://github.com/NBISweden/MrBayes	Phylogenetic_and_Population_Genetics
+https://github.com/abacus-gene/paml	Phylogenetic_and_Population_Genetics
+https://github.com/amkozlov/raxml-ng	Phylogenetic_and_Population_Genetics
+https://github.com/bbuchfink/diamond    Read_Alignment_and_Mapping
+https://github.com/djhshih/blat Read_Alignment_and_Mapping
+https://github.com/EddyRivasLab/hmmer	Protein_Sequence_Analysis
+https://github.com/rcedgar/muscle	Protein_Sequence_Analysis
+https://github.com/nbcrrolls/namd	Protein_Sequence_Analysis
+https://github.com/davidemms/OrthoFinder	Protein_Sequence_Analysis
+https://github.com/nathanweeks/exonerate	Protein_Sequence_Analysis
+https://github.com/BioInfoTools/BBMap	Read_Alignment_and_Mapping
+https://github.com/BenLangmead/bowtie2	Read_Alignment_and_Mapping
+https://github.com/lh3/minimap2	Read_Alignment_and_Mapping
+https://github.com/alexdobin/STAR	Read_Alignment_and_Mapping
+https://github.com/pachterlab/kallisto	RNA_Analysis
+https://github.com/ablab/rnaquast	RNA_Analysis
+https://github.com/COMBINE-lab/salmon	RNA_Analysis
+https://github.com/gpertea/stringtie	RNA_Analysis
+https://github.com/ShiLab-Bioinformatics/subread	RNA_Analysis
+https://github.com/pezmaster31/bamtools	Sequence_Data_Processing_and_Quality_Control
+https://github.com/statgen/bamUtil	Sequence_Data_Processing_and_Quality_Control
+https://github.com/weizhongli/cdhit	Sequence_Data_Processing_and_Quality_Control
+https://github.com/lh3/seqtk	Sequence_Data_Processing_and_Quality_Control
+https://github.com/lh3/tabtk	Sequence_Data_Processing_and_Quality_Control
+https://github.com/lh3/yak	Sequence_Data_Processing_and_Quality_Control
+https://github.com/FelixKrueger/TrimGalore	Sequence_Data_Processing_and_Quality_Control
+https://github.com/usadellab/Trimmomatic	Sequence_Data_Processing_and_Quality_Control
+https://github.com/torognes/vsearch	Sequence_Data_Processing_and_Quality_Control
+https://github.com/esteinig/nanoq	Sequence_Data_Processing_and_Quality_Control
+https://github.com/beagle-dev/beagle-lib	Phylogenetic_and_Population_Genetics
+https://github.com/GELOG/plink	Phylogenetic_and_Population_Genetics
+https://github.com/thlee/SNPhylo	Phylogenetic_and_Population_Genetics
+https://github.com/rajanil/fastStructure	Phylogenetic_and_Population_Genetics
+https://github.com/samtools/bcftools	Variant_Calling_and_Genotype_Analysis
+https://github.com/samtools	Variant_Calling_and_Genotype_Analysis
+https://github.com/broadinstitute/gatk	Variant_Calling_and_Genotype_Analysis
+https://github.com/broadinstitute/picard	Variant_Calling_and_Genotype_Analysis
+https://github.com/dkoboldt/varscan	Variant_Calling_and_Genotype_Analysis
+https://github.com/vcftools/vcftools	Variant_Calling_and_Genotype_Analysis
+https://github.com/pcingola/SnpEff	Variant_Calling_and_Genotype_Analysis
+https://github.com/satijalab/seurat	RNA_Analysis
+https://github.com/rambaut/figtree	Visualization
+https://github.com/igvteam/igv	Visualization
+https://github.com/wdecoster/NanoPlot	Sequence_Data_Processing_and_Quality_Control
+https://github.com/bactopia/bactopia	Workflow_Managers_and_Pipelines
+https://github.com/nextflow-io/nextflow	Workflow_Managers_and_Pipelines
+https://github.com/snakemake/snakemake	Workflow_Managers_and_Pipelines
+	
+	
