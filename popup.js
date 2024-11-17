@@ -29,16 +29,20 @@ async function readInputFile() {
   const response = await fetch(inputUrl);
   if (response.ok) {
     const text = await response.text();
-    // Split the text into lines and filter out empty lines
     return text
       .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0)
+      .map((line) => {
+        const [repo, category] = line.split(/\s+/); // Adjust separator if necessary
+        return { repo, category }; // Return an object with repo and category
+      });
   } else {
     console.error('Failed to read input.txt');
     return [];
   }
 }
+
 
 // Function to extract owner and repo from URL
 function extractOwnerRepo(url) {
@@ -266,60 +270,39 @@ async function fetchDiscussion(owner, repo, discussionNumber, token) {
 
 // Function to fetch all data
 async function fetchAllData(token, perRepoReleaseCount = null) {
-  const inputRepos = await readInputFile();
+  const inputRepos = await readInputFile(); // Now returns objects with repo and category
   const allReleasesData = [];
 
-  for (const repoUrl of inputRepos) {
-    const ownerRepo = extractOwnerRepo(repoUrl);
+  for (const { repo, category } of inputRepos) {
+    const ownerRepo = extractOwnerRepo(repo);
     if (!ownerRepo) continue;
-    const { owner, repo } = ownerRepo;
+    const { owner, repo: repoName } = ownerRepo;
 
-    let releases = await fetchReleases(
-      owner,
-      repo,
-      token,
-      perRepoReleaseCount
-    );
+    let releases = await fetchReleases(owner, repoName, token, perRepoReleaseCount);
 
-    // Check if releases are found
     if (releases.length === 0) {
-      // No releases found, fetch tags instead
-      console.log(
-        `No releases found for ${owner}/${repo}. Fetching tags instead.`
-      );
-      const tags = await fetchTags(owner, repo, token, perRepoReleaseCount);
+      const tags = await fetchTags(owner, repoName, token, perRepoReleaseCount);
 
       for (const tag of tags) {
-        // Fetch commit associated with the tag to get commit message
-        const commitData = await fetchCommit(
-          owner,
-          repo,
-          tag.commit.sha,
-          token
-        );
-
+        const commitData = await fetchCommit(owner, repoName, tag.commit.sha, token);
         if (!commitData) continue;
 
-        const releaseBody = commitData.commit.message || '';
-        const publishedAt = commitData.commit.author.date || null;
-
-        // Process as a release
         await processReleaseOrTag(
           owner,
-          repo,
+          repoName,
           {
             name: tag.name,
-            body: releaseBody,
-            published_at: publishedAt,
+            body: commitData.commit.message || '',
+            published_at: commitData.commit.author.date || null,
           },
           token,
-          allReleasesData
+          allReleasesData,
+          category // Add category
         );
       }
     } else {
-      // Process releases
       for (const release of releases) {
-        await processReleaseOrTag(owner, repo, release, token, allReleasesData);
+        await processReleaseOrTag(owner, repoName, release, token, allReleasesData, category);
       }
     }
   }
@@ -327,13 +310,17 @@ async function fetchAllData(token, perRepoReleaseCount = null) {
   return allReleasesData;
 }
 
+
+
+
 // Helper function to process a release or tag
 async function processReleaseOrTag(
   owner,
   repo,
   release,
   token,
-  allReleasesData
+  allReleasesData,
+  category
 ) {
   const releaseBody = release.body || '';
 
@@ -394,11 +381,12 @@ async function processReleaseOrTag(
   }
 
   allReleasesData.push({
-    owner: owner,
-    repo: repo,
+    owner,
+    repo,
+    category, // Add category to the release object
     release_name: release.name || 'No Release Name',
-    release_body: releaseBody,
-    issues: issuesInfo,
+    release_body: release.body || '',
+    issues: [],
     published_at: release.published_at || release.created_at || null,
   });
 }
@@ -419,9 +407,26 @@ function limitMarkdownContentByLines(markdownContent, maxLines) {
   return limitedMarkdown;
 }
 
+async function populateCategoryFilter() {
+  const inputRepos = await readInputFile();
+  const categoryFilter = document.getElementById('category-filter');
+
+  // Get unique categories
+  const uniqueCategories = [...new Set(inputRepos.map(({ category }) => category))];
+
+  // Add options to the dropdown
+  uniqueCategories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+}
+
+
 // Function to render the data
 function renderData(data, options = {}) {
-  const { searchQuery = '', dateFilter = 'all', customDate = null } = options;
+  const { searchQuery = '', dateFilter = 'all', customDate = null, categoryFilter = 'all' } = options; // Include categoryFilter
   const kanbanBoard = document.getElementById('kanban-board');
 
   // Clear existing content except headers
@@ -433,6 +438,11 @@ function renderData(data, options = {}) {
 
   // Filter data based on options
   let filteredData = data;
+
+  // Filter by category
+  if (categoryFilter !== 'all') {
+    filteredData = filteredData.filter((release) => release.category === categoryFilter);
+  }
 
   // Filter by date
   if (dateFilter !== 'all') {
@@ -550,11 +560,17 @@ function renderData(data, options = {}) {
         ? releaseDateObj.toLocaleDateString()
         : 'No Date';
 
+      // Create category element
+      const categoryElement = document.createElement('div');
+      categoryElement.className = 'category';
+      categoryElement.textContent = release.category || 'No Category';
+      
       // Append elements to software cell
       softwareCell.appendChild(softwareNameLink);
       softwareCell.appendChild(releaseNumber);
       softwareCell.appendChild(releaseDate);
-
+      softwareCell.appendChild(categoryElement);
+      
       kanbanBoard.appendChild(softwareCell);
 
       // Release Notes Cell
@@ -694,11 +710,14 @@ function renderData(data, options = {}) {
 }
 
 
+
 // Global variable to store fetched data
 let fetchedData = [];
 
 // Initialize the extension after the DOM has fully loaded
 document.addEventListener('DOMContentLoaded', () => {
+  populateCategoryFilter();
+
   // Event listener for the Save Token button
   document
     .getElementById('save-token-button')
@@ -754,8 +773,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchQuery = searchInput.value.trim();
     const dateFilter = dateFilterSelect.value;
     const customDate = customDateInput.value;
+    const categoryFilter = document.getElementById('category-filter').value;
+  
+    renderData(fetchedData, { searchQuery, dateFilter, customDate, categoryFilter });
+  });
 
-    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+  // Add event listener for category filter
+  document.getElementById('category-filter').addEventListener('change', () => {
+    const categoryFilter = document.getElementById('category-filter').value;
+    const searchQuery = document.getElementById('search-input').value.trim();
+    const dateFilter = document.getElementById('date-filter').value;
+    const customDate = document.getElementById('custom-date').value;
+  
+    renderData(fetchedData, { searchQuery, dateFilter, customDate, categoryFilter });
   });
 
   // Add event listeners to date filters for real-time filtering
@@ -763,7 +793,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchQuery = searchInput.value.trim();
     const dateFilter = dateFilterSelect.value;
     const customDate = customDateInput.value;
-
+    const categoryFilter = document.getElementById('category-filter').value;
+  
     // Show/hide custom date input based on date filter selection
     if (dateFilter === 'custom') {
       customDateInput.style.display = 'inline-block';
@@ -771,15 +802,16 @@ document.addEventListener('DOMContentLoaded', () => {
       customDateInput.style.display = 'none';
     }
 
-    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+    renderData(fetchedData, { searchQuery, dateFilter, customDate, categoryFilter });
   });
 
   customDateInput.addEventListener('input', () => {
     const searchQuery = searchInput.value.trim();
     const dateFilter = dateFilterSelect.value;
     const customDate = customDateInput.value;
-
-    renderData(fetchedData, { searchQuery, dateFilter, customDate });
+    const categoryFilter = document.getElementById('category-filter').value;
+  
+    renderData(fetchedData, { searchQuery, dateFilter, customDate, categoryFilter });
   });
 
   // Event listener for the Reset button
@@ -789,6 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
     customDateInput.value = '';
     customDateInput.style.display = 'none';
     document.getElementById('release-count').value = '1'; // Set default value if needed
-    renderData(fetchedData);
+    document.getElementById('category-filter').value = 'all'; // Reset category filter
+    renderData(fetchedData, { searchQuery: '', dateFilter: 'all', customDate: null, categoryFilter: 'all' });
   });
 });
