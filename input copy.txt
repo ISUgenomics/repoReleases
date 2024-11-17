@@ -81,3 +81,5 @@ https://github.com/madler/pigz
 https://github.com/nathanweeks/exonerate
 https://github.com/pcingola/SnpEff
 https://github.com/jgm/pandoc
+https://github.com/esteinig/nanoq
+https://github.com/wdecoster/NanoPlot
