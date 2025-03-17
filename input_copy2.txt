@@ -66,7 +66,6 @@ https://github.com/torognes/vsearch	Sequence_Data_Processing_and_Quality_Control
 https://github.com/esteinig/nanoq	Sequence_Data_Processing_and_Quality_Control
 https://github.com/beagle-dev/beagle-lib	Phylogenetic_and_Population_Genetics
 https://github.com/GELOG/plink	Phylogenetic_and_Population_Genetics
-https://github.com/chrchang/plink-ng    Phylogenetic_and_Population_Genetics
 https://github.com/thlee/SNPhylo	Phylogenetic_and_Population_Genetics
 https://github.com/rajanil/fastStructure	Phylogenetic_and_Population_Genetics
 https://github.com/samtools/bcftools	Variant_Calling_and_Genotype_Analysis
@@ -83,4 +82,5 @@ https://github.com/wdecoster/NanoPlot	Sequence_Data_Processing_and_Quality_Contr
 https://github.com/bactopia/bactopia	Workflow_Managers_and_Pipelines
 https://github.com/nextflow-io/nextflow	Workflow_Managers_and_Pipelines
 https://github.com/snakemake/snakemake	Workflow_Managers_and_Pipelines
-https://github.com/dpryan79/MethylDackel    Methylation
+	
+	
