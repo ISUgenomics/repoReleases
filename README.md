@@ -28,3 +28,5 @@ Briefly,
 
 once you have entered your token and click `Save Token`, you should just be able to click on  `Fetch All Releases` the next time you open the window as your token is now saved locally.
 
+**Note:** if you add an additional Category, you will need to reopen the extension(close any existing windows and click on the extension again) to see the new category in the dropdown.  This is because the categories are loaded when the extension is opened (popup.js). 
+
